@@ -1,0 +1,53 @@
+<<
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ expand file="addsite.lib" /expand
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite</title>
+  <<commonheader>>
+ </head>
+ <body class="container">
+  <<nav()>>
+  <div class="row">
+   <div class="col-md-12">
+    <h1>Templates</h1>
+    <<replace(ci_edit2('/apps/multisite/template/htmlos.txt',      800,600,'Edit htmlos.conf Template', 'TRUE'),'href=','class="btn btn-default" href=')>>
+    <span class="label label-default">BASE</span>
+    <span class="label label-default">DOMAIN</span>
+    <span class="label label-default">USER</span>
+    <span class="label label-default">SCRIPT</span>
+    <span class="label label-default">SERVICETYPE</span>
+    <span class="label label-default">DEFAULTDOMAIN</span>
+    <<
+      if domainname=wrapperdomains[1] then
+
+      else
+       display ^    <hr>^+
+    replace(ci_edit2('/apps/multisite/template/virtualhosts.txt',800,600,'Edit Virtual Host Template','TRUE'),'href=','class="btn btn-default" href=')+
+    replace(ci_edit2('/apps/multisite/template/virtualhosts_default.txt',800,600,'Edit Default Virtual Host Template','TRUE'),'href=','class="btn btn-default" href=')+^
+    <span class="label label-default">DOMAIN</span>
+    <span class="label label-default">USER</span>
+    <span class="label label-default">SHORTUSER</span>
+    <span class="label label-default">SCRIPTDOMAIN</span>
+    <span class="label label-default">ACCESSDOMAIN</span>
+    <span class="label label-default">ISHTTPS</span>
+    <span class="label label-default">ISHTTP</span>
+    <span class="label label-default">SITEROOT</span>
+    <span class="label label-default">SSLKEY</span>
+    <span class="label label-default">SSLCERT</span>
+    <span class="label label-default">OFFLINE</span>
+    <hr>^+
+    replace(ci_edit2('/apps/multisite/template/index.txt',       800,600,'Edit Default Page Template','TRUE'),'href=','class="btn btn-default" href=')+^
+    <hr>^+
+    replace(ci_edit2('/apps/multisite/template/offline.txt',     800,600,'Edit Default Offline Template','TRUE'),'href=','class="btn btn-default" href=')
+       /display
+      /if
+    >>
+   </div>
+  </div>
+ </body>
+</html>

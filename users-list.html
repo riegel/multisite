@@ -1,0 +1,142 @@
+<<
+expand file="local.lib" /expand
+expand file="/system/clearimage/DLL.lib" /expand
+sites_site='ERROR'
+
+users=multisite_users() # Will return users for server or users for wrapperdomain /#
+
+if domainname=wrapperdomains[1] then
+ goto router('/site/'+replace(users[1,1],USERPREFIX,''))
+/if
+
+
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Site/User List</title>
+  <<commonheader>>
+  <style>
+   @media (min-width: 768px) {
+    .modal-xl {
+     width: 90%;
+     max-width:1200px;
+    }
+   }
+
+
+
+  </style>
+
+
+
+ </head>
+ <body class="container" style="margin-bottom:2em;">
+  <<showwith('<div class="alert alert-info alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>',message(0),'</div>')>>
+
+  <<nav()>>
+
+  <div class="row">
+   <div class="col-md-12">
+    <h1>Site</h1>
+    <<showwith('<p>',message(''),'</p>')>>
+   </div>
+  </div>
+
+  <div class="row">
+   <div class="col-md-12">
+    <h4>Choose</h4>
+    <div class="list-group">
+    <<
+     i=1
+     data='ERROR'
+     for name=users rowname=x do
+      if left(x[1],length(USERPREFIX))=USERPREFIX then
+
+       badge='' thiscog=''
+       if isdirty('/apps/multisite',x[1])='TRUE' then
+        thiscog=' <i class="fa fa-cog fa-spin"></i>'
+       /if
+
+       if x[1]=defaultuser then
+        badge='<span class="badge">default</span>'
+       /if
+
+       sysmd('/apps/multisite/users/'+x[1])
+       setvalue(data,'user['+i+']',x[1])
+       display '<a href="'+router('/'+x[1])+'" class="list-group-item">'+badge+'<b>'+replace(x[1],USERPREFIX,'')+'</b>'+thiscog+'</a>' /display
+       i=i+1
+      /if
+     /for
+    >>
+    </div>
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-md-12">
+    <h4>Add</h4>
+    <form action="newuser" method="post">
+     <<HTML_authorize_variables('mybutton')>>
+     <div class="input-group">
+      <input type="text" name="sites_site" class="form-control" placeholder="User/Site Name">
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="submit" name="mybutton" value="ADD">Add</button>
+        <button class="btn btn-default" type="submit" name="mybutton" value="ADDPLUS">Add + <<if usewww='www' then display usewww+'.' /display /if>>&lt;site&gt;.<<defaulttld>></button>
+      </span>
+     </div><!-- /input-group -->
+    </form>
+   </div>
+ </body>
+</html>
+<<overlay newuser
+
+ make_dirty('/apps/multisite','virtualhosts')
+ make_dirty('/apps/multisite','virtualhostsapache')
+
+
+
+ multisiteinit='ERROR'
+ message=''
+ if count(sites_site,'.')=0 and aestivafilename(sites_site)=sites_site and not(isdir('/apps/multisite/users/'+sites_site)) then
+
+  make_dirty('/apps/multisite',sites_site)
+
+  message=message+sysmd('/apps/multisite/users/'+USERPREFIX+sites_site+'/')
+  message=message+'adduser:'+adduser('-d '+SITEROOT+USERPREFIX+sites_site+' '+USERPREFIX+sites_site)
+  message=message+'addskeleton:'+addskeleton.lib(USERPREFIX+sites_site)
+  message=message+'keygen:'+keygen(SITEROOT+USERPREFIX+sites_site+'/.ssh/id_rsa')
+
+  chown(SITEROOT+USERPREFIX+sites_site+'/.ssh/id_rsa',USERPREFIX+sites_site,USERPREFIX+sites_site)
+  chown(SITEROOT+USERPREFIX+sites_site+'/.ssh/id_rsa.pub',USERPREFIX+sites_site,USERPREFIX+sites_site)
+
+  if mybutton='ADDPLUS' then
+   if addwww='naked' then theDOMAIN=       sites_site+'.'+DEFAULTTLD theDOMAIN1='www.'+sites_site+'.'+DEFAULTTLD
+   else                   theDOMAIN='www.'+sites_site+'.'+DEFAULTTLD theDOMAIN1=       sites_site+'.'+DEFAULTTLD
+   /if
+   userdomains='ERROR'
+   x='ERROR'
+   x[1]='ERROR'
+   x[2]=''
+   x[3]=''
+   userdomains=appends(userdomains,x)
+   x[1]=theDOMAIN
+   x[2]='yes'
+   x[3]='no'
+   userdomains=appends(userdomains,x)
+   x[1]=theDOMAIN1
+   x[2]='no'
+   x[3]='no'
+   userdomains=appends(userdomains,x)
+   copy userdomains to file="/apps/multisite/users/"+USERPREFIX+sites_site+"/domains.txt" ts="," /copy
+   message=message+' Added ('+thedomain+') and ('+thedomain1+')'
+  /if
+  message('User Added ('+USERPREFIX+sites_site+'):'+message)
+  sites_site='ERROR'
+  # goto getlink('restart.html','returnpage',getlink('config.html;buildandmakehtmlos')) /#
+  goto page
+ else
+  message('There was a problem adding user. User cannot already exist and/or special characters not allowed.')
+  goto page
+ /if
+>>

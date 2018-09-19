@@ -1,0 +1,334 @@
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+function asform(tag,url) locals x,tag_,m do
+ expand file='/apps/form/form.lib' /expand
+ m=split(tag,'?')
+ tag_=listtorow(m[1,1],'/')
+ return FORM.showHTMLforformURL(tag_[3],url) /return
+/function
+
+
+
+
+
+
+
+function astable_col_class(tag,data,classcol) locals x,m,tag_ do
+ data=tabletocsv(data)
+ m=split(tag,'?')
+ t=listtorow(m[1,1],'/')
+ tag_=gettable(t,2+0,cols(t),1,1)
+ return showtable_col_class(tag,tag_,data,'','',classcol) /return
+/function
+
+
+function asTable(tag,data) do
+ return astable_col_class(tag,data,'ERROR') /return
+/function
+
+
+
+
+
+
+
+
+
+
+function plural(t) do
+ if rows(t)>1 then return 's' /return else return '' /return /if
+/function
+
+
+
+
+
+
+
+
+
+
+function webblocks.co.server(tag,tag_,context,source) locals x,i,versions,servers,text,mainsignature,aliassignature,createserver,thecount,class do
+
+versions=split(VERSIONS,',')
+sysmd('/domain/'+domainid+'/users/')
+sysfixprivate('/domain/'+domainid+'/users/'+thisuser[1]+'.csv')
+copy file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' to servers /copy
+thecount=0
+for name=servers rowname=x do
+ if x[2]='ALIAS' then else thecount=thecount+1 /if
+/for
+
+
+
+if tag_[2]='api' then
+ return 'API Test Tag found' /return
+
+
+elif tag_[2]='list' then
+ if cols(servers)>1 then
+  text='ERROR'
+  y='ERROR'
+  y[1]='URL'
+  y[2]=''
+  y[3]=''
+  y[4]='SSH & SFTP'
+  y[5]=''
+  y[6]='Version'
+  y[7]='header'
+  text=appends(text,y)
+  class='odd'
+  for name=servers rowname=x do
+   if x[2]='ALIAS' then
+    # Ignore /#
+   else
+    temp=trim(curl('http://'+x[1]+'.'+ACCESSDOMAIN+'/cgi-bin/start.cgi',0,'GET','',''))
+    mainsignature=temp
+    if count(temp,'Aestiva HTML/OS')>0 or count(temp,'served by HTML/OS')>0 then
+     temp='SETUP'
+    elif temp<>'NOTSETUP' then
+     temp='READY'
+    /if
+
+
+    y='ERROR'
+    y[1]=x[1]+'.'+ACCESSDOMAIN
+
+
+    if isfile('/apps/private/'+domainid+'/publickey-'+x[1]+'.txt') then
+     copy file='/apps/private/'+domainid+'/publickey-'+x[1]+'.txt' to temp99 /copy
+     if temp99='' then
+      sysrm('/apps/private/'+domainid+'/publickey-'+x[1]+'.txt')
+      ftptext=''
+     else
+      ftptext='<a href="'+pagelink('/apps/multisite/client/router.overlay;installkey','remoteserver',x[1])+'">Activate</a>'
+     /if
+    else
+     ftptext=''
+    /if
+
+
+    if temp='NOTSETUP' then
+     y[2]='<a href="'+pagelink('/apps/multisite/client/router.overlay;visitserver','visitserver',x[1]+'|'+x[2]+'|'+x[3])+'" target="new">Activate</a>'
+     y[3]='<span class="disabled">-</span>'
+     y[4]='<span class="disabled">-</span>'
+    elif temp='READY' then
+     y[2]='<a href="http://'+x[1]+'.'+ACCESSDOMAIN+'/cgi-bin/asetup'+x[2]+'.cgi" target="_blank">Run&nbsp;asetup</a>'
+     y[3]='<span class="disabled">-</span>'
+     y[4]=ci_edit2('/apps/private/'+domainid+'/publickey-'+x[1]+'.txt',500,300,'key','TRUE')+showwith(' | ',ftptext,'')
+    else
+     y[2]='<a href="http://'+x[1]+'.'+ACCESSDOMAIN+'" target="_blank">Visit</a>'
+     y[3]='<a href="http://'+x[1]+'.'+ACCESSDOMAIN+'/cgi-bin/start.cgi/login.html" target="new">Desktop</a>'
+     y[4]=ci_edit2('/apps/private/'+domainid+'/publickey-'+x[1]+'.txt',500,300,'key','TRUE')+showwith(' | ',ftptext,'')
+    /if
+    y[5]='<a href="'+pagelink('/apps/multisite/client/router.overlay;removeserver','removeserver',x[1])+'">Remove</a>'
+    y[6]=x[2]
+    y[7]=class
+    text=appends(text,y)
+
+
+    for name=servers rowname=i do
+     if i[2]='ALIAS' and i[1]=x[1] then
+
+      tempA=trim(curl('http://'+i[3]+'/cgi-bin/start.cgi',0,'GET','',''))
+      aliassignature=tempA
+      if tempa='NOTSETUP' then
+       # Cool /#
+      elif count(tempA,'Aestiva HTML/OS')>0 or count(tempA,'served by HTML/OS')>0 then
+       tempA='SETUP'
+      elif mainsignature=aliassignature then
+       tempA='READY'
+      else
+       tempA=trim(curl('http://'+i[3]+'/cgi-bin/asetup'+x[2]+'.cgi',0,'GET','',''))
+       if count(tempA,'/cgi-bin/asetup'+x[2]+'.cgi')>0 and count(tempA,'Aestiva')>0 then
+        tempA='READY'
+       else
+        tempA='NOTSETUP'
+       /if
+      /if
+      y='ERROR'
+      y[1]='&nbsp;&nbsp;&nbsp;'+i[3]
+
+      if temp='NOTSETUP' then
+       y[2]=''
+      else
+       if tempA='SETUP' then
+        y[2]='<a href="http://'+i[3]+'" target="new">Visit</a>'
+       elif tempA='READY' then
+        y[2]='<a href="http://'+i[3]+'/cgi-bin/asetup'+x[2]+'.cgi" target="_blank">Run&nbsp;asetup</a>'
+       elif tempA='NOTSETUP' then
+        y[2]='<a href="'+pagelink('/apps/multisite/client/router.overlay;visitserver','visitserver',i[1]+'|'+i[2]+'|'+i[3]+'|'+x[2]+'|'+x[3])+'" target="new">Activate</a>'
+       else
+        y[2]='<a href="/unknown-server-state" target="new">Unknown</a>'
+       /if
+
+
+
+
+
+      /if
+
+
+
+
+
+      y[3]=ci_edit2('/apps/private/'+domainid+'/aliases-'+i[3]+'.txt',500,300,'aliases','TRUE')
+      y[4]=''
+      y[5]='<a href="'+pagelink('/apps/multisite/client/router.overlay;removeserveralias','removeserver',i[3])+'">Remove</a>'
+      y[6]=''
+      y[7]=class
+      text=appends(text,y)
+     /if
+    /for
+
+
+
+    y='ERROR'
+    y[1]='&nbsp;&nbsp;&nbsp;<small><a href="/add-domain?serverid='+x[1]+'" class="button">--Add a Domain--</a></small>'
+    y[2]=''
+    y[3]=''
+    y[4]=''
+    y[5]=''
+    y[6]=''
+    y[7]=class
+    text=appends(text,y)
+
+
+
+
+   /if
+   if class='odd' then class='even' else class='odd' /if
+  /for
+
+
+
+  text=astable_col_class('/table/createserver/220L/70C/70C/140C/70C/70R',text,7)
+  text='<h2>Your Private Servers:</h2><h3>'+thecount+' of 5 available servers used</h3>'+text
+ else
+
+  text='ERROR'
+  y='ERROR'
+  y[1]='URL'
+  y[2]=''
+  y[3]=''
+  y[4]=''
+  y[5]=''
+  y[6]='Version'
+  y[7]=class
+  text=appends(text,y)
+  y='ERROR'
+  y[1]='<span class="disabled">-servername-</span>'
+  y[2]='<span class="disabled">-</span>'
+  y[3]='<span class="disabled">-</span>'
+  y[4]='<span class="disabled">-</span>'
+  y[5]='<span class="disabled">-</span>'
+  y[6]='<span class="disabled">-</span>'
+  y[7]=class
+  text=appends(text,y)
+
+
+
+
+  text=astable('/table/createserver/220L/70C/70C/140C/70C/70R?class=7',text)
+  text='<h2>Your Private Servers:</h2><h3>0 of 5 available servers used</h3>'+text
+  text=createserver+text
+
+ /if
+
+
+
+
+
+
+
+
+elif tag_[2]='create' then
+
+
+
+ if thecount>4 and thisuser[1]<>'10002' then
+  createserver='<p>You have reached your limit of 5 servers. Remove a server to create more.</p>'
+ else
+   # 
+   # "RADIO","id3748585","HTML/OS Version","Choose the version you want installed on this server.","asetup","REQUIRED","",""
+   # "SUBMIT","id3748725","Create Server","","","","",""
+  /#
+  url=formlink('/apps/multisite/client/router.overlay;createserver','')
+  createserver='<h2>Create Server</h2>'+asform('/form/createserver',url)
+ /if
+
+ text= showwith('<h1 class="message">',messagefor('create',''),' <a href="'+getenv('REQUEST_URI')+'">done</a></h1>') + createserver
+
+
+
+
+
+
+
+elif tag_[2]='addalias' then
+
+ serveralias=''
+ if servers[1,1]='' or servers[1,1]='ERROR' or servers[2,1]='' or servers[2,1]='ERROR' then
+  serveralias='Setup some servers first'
+ else
+  url=formlink('/apps/multisite/client/router.overlay;createserveralias','')
+  temp=''
+  for name=servers rowname=x do
+   temp=temp+'"'+x[1]+'.'+ACCESSDOMAIN+'","'+x[1]+'"'+lf
+  /for
+  temp=left(temp,length(temp)-1)
+  PRIVATE_id26997406=temp
+
+
+  temp='ERROR'
+  $(getvariables(tag_vars,'
+   temp=EXTERNAL_serverid
+  '))
+  if temp<>'ERROR' then form_id26997406=temp /if
+
+
+
+
+
+  serveralias='<h2>Add Domain - '+form_id26997406+'</h2>'+asform('/form/createserveralias',url)
+ /if
+
+ text=serveralias
+
+
+else
+ return '' /return
+/if
+
+ return showwith('<h1 class="message">',messagefor('general',0),' <a href="'+getenv('REQUEST_URI')+'">ok</a></h1>')+text /return
+
+
+
+
+
+/function
+
+
+
+
+
+
+
+
+
+
+
+
+
+ function isalphanumeric(text) locals ISALPHANUM,x,c,t do
+  ISALPHANUM='TRUE'
+  for name=x value=1 to length(text) do
+   c=middle(text,x,x)
+   t=getascii(c)
+   if t<48 or  t>122 then ISALPHANUM='FALSE' BREAK /if
+   if t>57 and t<97  then ISALPHANUM='FALSE' BREAK /if
+  /for
+  return ISALPHANUM /return
+ /function

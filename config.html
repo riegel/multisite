@@ -1,0 +1,173 @@
+<<
+ multisiteinit='ERROR'
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ expand file="/apps/multisite/addsite.lib" /expand
+
+ copy file='/apps/multisite/.TEMP/virtual_hosts_ready.txt' to config /copy
+ cp(VHOSTSFILE,ci_getpath('/apps/multisite/virtual_hosts.txt'))
+ copy file="/apps/multisite/virtual_hosts.txt" to liveconfig /copy
+ rm(ci_getpath('/apps/multisite/virtual_hosts.txt'))
+ copy config to file='/apps/multisite/virtual_hosts.txt' /copy
+ diffcommand='usr/bin/diff '+VHOSTSFILE+' '+ci_getpath('/apps/multisite/virtual_hosts.txt')
+ diff=syscall('DNS diff',diffcommand)
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite</title>
+  <<commonheader>>
+  <style>
+   pre {display:block;overflow:auto;width:500px;height:400px;}
+  </style>
+ </head>
+ <body class="container">
+  <<showwith('<div class="alert alert-info alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>',message(0),'</div>')>>
+
+  <<nav()>>
+  <div class="row">
+   <div class="col-md-12">
+    <h1>HTTP Config</h1>
+<<
+if showdiff='TRUE' or (diff<>'' and diff<>'ERROR') then
+ display '
+    <h2>Diff Check</h2>' /display
+
+leftdiff=liveconfig rightdiff=config
+display ^<a ^+ci_parsehref('href="/apps/diffcheck/index.html" popup="900,900"')+^>diff check</a>^ /display
+
+
+ if diff<>'' and diff<>'ERROR' then showdiff='ERROR' /if
+ if showdiff='TRUE' then display '    <h4><a href="'+page+'" name="showdiff" value="ERROR" class="btn btn-default">Hide diff files</a></h4>' /display /if
+
+ display '
+    '+showwith('<pre style="width:1000px;height:200px;">',replaceall(replaceall(replaceall(diff,'&','&amp;'),'<','&lt;'),'>','&gt;'),'</pre>')+'
+    <table>
+     <tr>
+      <td>
+       <h2>Live Config</h2>
+       <pre>'+replaceall(replaceall(replaceall(liveconfig,'&','&amp;'),'<','&lt;'),'>','&gt;')+'</pre>
+      </td>
+      <td>
+       <h2>Generated Config</h2>
+       <pre>'+replaceall(replaceall(replaceall(    config,'&','&amp;'),'<','&lt;'),'>','&gt;')+'</pre>
+      </td>
+     </tr>
+    </table>'
+ /display
+else
+
+copy file="/apps/multisite/users/userstatus.txt" ts="," to userstatus /copy
+    n_DOMAIN       = 1
+    n_USER         = 2
+    n_SHORTUSER    = 3
+    n_SCRIPTDOMAIN = 4
+    n_ACCESSDOMAIN = 5
+    n_HTMLOS       = 6
+    n_ISHTTPS      = 7
+    n_ISHTTP       = 8
+    n_SITEROOT     = 9
+    n_SSLKEY       = 10
+    n_SSLCERT      = 11
+    n_OFFLINE      = 12
+
+
+missing='ERROR'
+for name=userstatus rowname=i do
+ if i[n_HTMLOS]='FALSE' then
+  missing=appends(missing,i)
+ /if
+/for
+
+
+if missing<>'ERROR' then
+ display '
+    <h2>Missing HTML/OS Installs</h2>
+    <table class="table">
+     <tr>
+      <th>Domain</th>
+     </tr>'
+ /display
+ for name=missing rowname=x do
+  display '<tr><td>'+x[1]+'</td></tr>' /display
+ /for
+ display '</table>
+    <p><a href="makehtmlos" class="btn btn-danger">Build Missing HTML/OS Binaries</a></p>'
+ /display
+/if
+
+
+
+ display '
+       <h2>Generated Config</h2>
+       <h4><a href="'+page+'" name="showdiff" value="TRUE" class="btn btn-default">Show diff files</a></h4>
+       <pre style="width:1000px;">'+replaceall(replaceall(replaceall(    config,'&','&amp;'),'<','&lt;'),'>','&gt;')+'</pre>'
+ /display
+/if
+
+
+>>
+
+
+
+
+   </div>
+  </div>
+ </body>
+</html>
+
+<<overlay makehtmlos
+
+
+message=''
+copy file="/apps/multisite/users/userstatus.txt" ts="," to userstatus /copy
+    n_DOMAIN        = 1
+    n_USER          = 2
+    n_SHORTUSER     = 3
+    n_SCRIPTDOMAIN  = 4
+    n_ACCESSDOMAIN  = 5
+    n_HTMLOS        = 6
+    n_ISHTTPS       = 7
+    n_ISHTTP        = 8
+    n_SITEROOT      = 9
+    n_SSLKEY        = 10
+    n_SSLCERT       = 11
+    n_OFFLINE       = 12
+    n_DEFAULTDOMAIN = 13
+
+
+ for name=userstatus rowname=i do
+  if i[n_HTMLOS]='FALSE' then
+
+   options=setvalue(options,"asetup","TRUE")
+   options=setvalue(options,"defaultdomain",i[n_DEFAULTDOMAIN])
+
+   temp=trim(curl(i[n_domain]+'.'+ACCESSDOMAIN+'/apps/multisite/key.txt','--connect-timeout 2','GET','',''))
+   if MULTISITE_KEY=temp then
+    message=message+'ERROR: NOT READY, addHTMLOS("'+i[n_DOMAIN]+'","'+i[n_USER]+'","'+showwith('',options,'')+'")'+lf
+   else
+    options='"asetup","TRUE"'
+    temp=addHTMLOS(i[n_DOMAIN],i[n_USER],options)
+    if count(temp,'<script language="JavaScript">'+lf+'<!--'+lf+'parent.iframe.location="')>0 then
+     temp='Build/Rebuild Successful'
+    else
+     temp='There was a problem automatically building HTML/OS. Try "Repair Structure" then "build/rebuild". The text of the error from asetup is: <hr>'+replaceall(cleanerror(temp),'Aestiva Array Install','')
+    /if
+    message=message+'addHTMLOS("'+i[n_DOMAIN]+'","'+i[n_USER]+'","'+showwith('',options,'')+'")'+temp
+   /if
+  /if
+ /for
+ message(viewsource(message))
+ if returnpage<>'ERROR' then 
+  temp=returnpage
+  returnpage='ERROR'
+  goto temp
+ else
+  goto page
+ /if
+>>
+
+
+
+

@@ -1,0 +1,371 @@
+1.0 06/22/2016 14:56 Bump Version
+1.01 06/22/2016 14:56 Bump Version
+1.02 06/22/2016 15:10 Bump Version
+1.03 06/22/2016 15:36 Moved asetup out
+1.04 06/22/2016 16:04 Added version and version history
+1.05 06/22/2016 17:07 Moved asetup to /system/installprograms
+1.06 06/22/2016 17:18 Adding System Tests
+1.07 06/22/2016 17:19 Adding System Tests
+1.08 11/16/2016 18:56 Initial Bundle
+1.09 11/16/2016 19:42 Bundle
+1.1 02/16/2017 18:43 Initial build before moving to Clear Image development server
+1.11 02/16/2017 18:44 Initial build before moving to Clear Image development server
+1.12 02/16/2017 19:19 Final Version, production migrated to clear image servers
+1.13 02/16/2017 19:38 Initial Bundle on Clear Image Development Server
+1.14 02/16/2017 19:38 Initial Bundle on Clear Image Development Server
+1.15 02/16/2017 19:56 Add description.txt to bundle
+1.16 02/16/2017 20:07 Added appid to installed program to identify the source of the app
+1.17 02/16/2017 20:29 Added appid to installed program to identify the source of the app
+1.18 02/16/2017 20:42 working on interface
+1.19 02/16/2017 21:01 working on interface
+1.2 02/16/2017 21:07 working on interface
+1.21 02/16/2017 21:09 working on interface
+1.22 02/16/2017 21:32 working on interface
+1.23 02/16/2017 21:45 working on interface
+1.24 02/16/2017 21:47 working on interface
+1.25 02/16/2017 21:47 working on interface
+1.26 02/17/2017 01:34 Streamlined Preferences
+1.27 02/17/2017 01:37 Streamlined Preferences
+1.28 02/17/2017 01:40 Streamlined Preferences
+1.29 02/17/2017 01:53 Streamlined Preferences
+1.3 02/17/2017 01:58 Streamlined Preferences
+1.31 02/17/2017 14:42 Added adduser and userdel to unit tests
+1.32 02/17/2017 14:43 Added adduser and userdel to unit tests
+1.33 02/17/2017 14:50 Added adduser and userdel to unit tests
+1.34 02/17/2017 14:52 Added adduser and userdel to unit tests
+1.35 02/17/2017 14:54 Added adduser and userdel to unit tests
+1.36 02/17/2017 14:57 Added adduser and userdel to unit tests
+1.37 02/18/2017 17:18 Added adduser and userdel to unit tests
+1.38 02/18/2017 19:13 Created Individal App update mechanism, update apps from within themselves.
+1.39 02/18/2017 19:15 Created Individal App update mechanism, update apps from within themselves.
+1.4 02/18/2017 19:16 Created Individal App update mechanism, update apps from within themselves.
+1.41 02/18/2017 19:18 Created Individal App update mechanism, update apps from within themselves.
+1.42 02/18/2017 19:22 Created Individal App update mechanism, update apps from within themselves.
+1.43 02/18/2017 19:23 Created Individal App update mechanism, update apps from within themselves.
+1.44 02/18/2017 19:24 Created Individal App update mechanism, update apps from within themselves.
+1.45 02/18/2017 19:25 Created Individal App update mechanism, update apps from within themselves.
+1.46 02/18/2017 19:26 Created Individal App update mechanism, update apps from within themselves.
+1.47 02/18/2017 19:27 Created Individal App update mechanism, update apps from within themselves.
+1.48 02/19/2017 12:16 Working on config.html
+1.49 02/19/2017 12:17 Working on config.html
+1.5 02/19/2017 12:18 Working on config.html
+1.51 02/19/2017 12:30 Working on config.html
+1.52 02/19/2017 12:40 addpid fix
+1.53 02/19/2017 12:41 addpid fix
+1.54 02/19/2017 12:51 addpid fix
+1.55 02/19/2017 12:52 addpid fix
+1.56 02/19/2017 12:56 added appmanagerversion to get source function
+1.57 02/19/2017 12:59 added appmanagerversion to get source function
+1.58 02/19/2017 13:00 added appmanagerversion to get source function
+1.59 02/19/2017 13:00 added appmanagerversion to get source function
+1.6 02/19/2017 13:00 added appmanagerversion to get source function
+1.61 02/19/2017 13:04 added appmanagerversion to get source function
+1.62 02/19/2017 13:04 added appmanagerversion to get source function
+1.63 02/19/2017 13:05 added appmanagerversion to get source function
+1.64 02/19/2017 13:05 added appmanagerversion to get source function
+1.65 02/19/2017 13:11 added appmanagerversion to get source function
+1.66 02/19/2017 13:12 added appmanagerversion to get source function
+1.67 02/19/2017 13:21 added appmanagerversion to get source function
+1.68 02/19/2017 13:40 added appmanagerversion to get source function
+1.69 02/19/2017 13:41 added appmanagerversion to get source function
+1.7 02/19/2017 13:43 added appmanagerversion to get source function
+1.71 02/19/2017 13:44 added appmanagerversion to get source function
+1.72 02/19/2017 17:30 Worked on httpd.conf virtual host generator
+1.73 02/19/2017 17:33 Worked on httpd.conf virtual host generator
+1.74 02/19/2017 17:52 Added public function keylist()
+1.75 02/19/2017 21:03 Added public function keylist()
+1.76 02/19/2017 21:04 Added public function keylist()
+1.77 02/19/2017 21:47 Virtual Hosts Builder
+1.78 02/19/2017 21:48 Virtual Hosts Builder
+1.79 02/19/2017 22:00 Virtual Hosts Builder
+1.8 02/19/2017 22:07 Virtual Hosts Builder
+1.81 02/19/2017 22:07 Virtual Hosts Builder
+1.82 02/19/2017 22:08 Virtual Hosts Builder
+1.83 02/19/2017 22:26 Virtual Hosts Builder
+1.84 02/19/2017 22:27 Virtual Hosts Builder
+1.85 02/20/2017 00:57 Added Apache Restart
+1.86 02/20/2017 13:12 Restart Apache Functionality
+1.87 02/20/2017 14:45 Build User From Skeleton Directory
+1.88 02/20/2017 15:34 Build User From Skeleton Directory
+1.89 02/20/2017 15:54 Build User From Skeleton Directory
+1.9 02/20/2017 22:30 First Release that does auto install of asetup
+1.91 02/20/2017 22:41 First Release that does auto install of asetup
+1.92 02/20/2017 22:48 First Release that does auto install of asetup
+1.93 02/21/2017 00:01 First Release that does auto install of asetup
+1.94 02/21/2017 00:04 First Release that does auto install of asetup
+1.95 02/21/2017 00:08 First Release that does auto install of asetup
+1.96 02/21/2017 00:11 First Release that does auto install of asetup
+1.97 02/21/2017 00:14 Tweaks to users-view.html
+1.98 02/21/2017 00:15 Tweaks to users-view.html
+1.99 02/21/2017 00:30 Tweaks to users-view.html
+2 02/21/2017 00:51 Tweaks to users-view.html
+2.01 02/21/2017 00:56 Tweaks to users-view.html
+2.02 02/21/2017 00:57 Tweaks to users-view.html
+2.03 02/21/2017 20:13 Added config test to apache restart
+2.04 02/22/2017 13:02 Add config test to restart apache
+2.05 02/22/2017 13:07 Add config test to restart apache
+2.06 02/22/2017 13:13 Added rebuild skeleton feature to a site.
+2.07 02/22/2017 13:16 Added rebuild skeleton feature to a site.
+2.08 02/22/2017 13:22 Added rebuild skeleton feature to a site.
+2.09 02/22/2017 13:42 Added rebuild skeleton feature to a site.
+2.1 02/22/2017 13:44 Added URL Check for build htmlos
+2.11 02/22/2017 13:51 Added URL Check for build htmlos
+2.12 02/22/2017 13:51 Added URL Check for build htmlos
+2.13 02/22/2017 14:09 Added URL Check for build htmlos
+2.14 02/22/2017 14:10 Added URL Check for build htmlos
+2.15 02/22/2017 14:26 Modified makeskel so that it makes dirs, and copys file if they do not exist, always repairs permissions.
+2.16 02/22/2017 15:12 Modified makeskel so that it makes dirs, and copys file if they do not exist, always repairs permissions.
+2.17 02/22/2017 15:15 Modified makeskel so that it makes dirs, and copys file if they do not exist, always repairs permissions.
+2.18 02/24/2017 16:11 Added ability to rebuild HTML/OS Installs
+2.19 03/14/2017 12:56 Added ability to show diff even when it thinks all is good
+2.2 03/14/2017 13:00 Added ability to show diff even when it thinks all is good
+2.21 03/14/2017 13:02 Added ability to show diff even when it thinks all is good
+2.22 03/14/2017 13:17 Recursively chown all files when repairing a user
+2.23 03/14/2017 13:30 Recursively chown all files when repairing a user
+2.24 03/14/2017 13:31 graceful restart
+2.25 03/14/2017 13:33 graceful restart
+2.26 03/14/2017 13:34 graceful restart
+2.27 03/14/2017 13:41 Better error reporting when rebuilding htmlos sites
+2.28 03/14/2017 13:47 Better error reporting when rebuilding htmlos sites
+2.29 03/14/2017 13:49 Better error reporting when rebuilding htmlos sites
+2.3 03/14/2017 13:50 Better error reporting when rebuilding htmlos sites
+2.31 03/14/2017 13:51 Better error reporting when rebuilding htmlos sites
+2.32 03/14/2017 13:53 Better error reporting when rebuilding htmlos sites
+2.33 03/14/2017 13:54 Better error reporting when rebuilding htmlos sites
+2.34 03/14/2017 14:05 Better error reporting when rebuilding htmlos sites
+2.35 03/15/2017 14:35 added /api handler
+2.36 03/15/2017 15:03 added /api handler
+2.37 03/15/2017 15:17 added /api handler
+2.38 03/15/2017 18:31 Working on API
+2.39 03/15/2017 18:32 Working on API
+2.4 03/15/2017 18:33 Working on API
+2.41 03/15/2017 19:04 Working on API
+2.42 03/15/2017 19:05 Working on API
+2.43 03/15/2017 19:09 Working on API
+2.44 03/15/2017 19:12 Working on API
+2.45 03/15/2017 22:40 API
+2.46 03/16/2017 15:37 Add Public/Private KEy signature method
+2.47 03/16/2017 15:39 Add Public/Private KEy signature method
+2.48 03/16/2017 15:43 Add Public/Private KEy signature method
+2.49 03/16/2017 16:10 Add Public/Private KEy signature method
+2.5 03/16/2017 16:15 Add Public/Private KEy signature method
+2.51 03/16/2017 16:18 Add Public/Private KEy signature method
+2.52 03/16/2017 16:19 Add Public/Private KEy signature method
+2.53 03/16/2017 16:26 Add Public/Private KEy signature method
+2.54 03/16/2017 16:32 Add Public/Private KEy signature method
+2.55 03/16/2017 16:39 Add Public/Private KEy signature method
+2.56 03/18/2017 17:24 fixed hcsv to return first row as headers
+2.57 03/18/2017 17:26 fixed hcsv to return first row as headers
+2.58 03/18/2017 17:27 fixed hcsv to return first row as headers
+2.59 03/20/2017 21:22 Fixed issue where htmlos.conf was changeing to addWWW Y
+2.6 03/20/2017 21:33 Fixed issue where htmlos.conf was changeing to addWWW Y
+2.61 03/21/2017 17:45 Added Take Offline
+2.62 03/21/2017 17:49 Added Take Offline
+2.63 03/21/2017 17:53 Added Take Offline
+2.64 03/21/2017 18:11 Added Take Offline
+2.65 03/21/2017 18:12 Added Take Offline
+2.66 03/21/2017 18:15 Added Take Offline
+2.67 03/21/2017 18:16 Added Take Offline
+2.68 03/21/2017 18:17 Added Take Offline
+2.69 03/21/2017 18:21 Added Take Offline
+2.7 03/21/2017 18:23 Added Take Offline
+2.71 03/21/2017 18:40 Added Take Offline
+2.72 03/21/2017 19:00 Added Use Beta Option
+2.73 03/21/2017 19:00 Added Use Beta Option
+2.74 03/21/2017 19:22 Added Use Beta Option
+2.75 03/21/2017 21:33 Added Use Beta Option
+2.76 03/21/2017 21:36 Added Use Beta Option
+2.77 03/21/2017 21:36 Reworked Interface, Supports ( beta | live | offline )
+2.79 03/22/2017 10:40 Added restart apache function
+2.8 03/22/2017 12:39 Added restart apache function
+2.81 03/22/2017 12:44 Added restart apache function
+2.82 03/22/2017 12:50 Added restart apache function
+2.83 03/22/2017 12:55 Added restart apache function
+2.84 03/22/2017 16:28 Reworked Interface, streamlined functions, Improved Restart
+2.85 03/22/2017 16:31 Reworked Interface, streamlined functions, Improved Restart
+2.86 03/22/2017 16:33 Reworked Interface, streamlined functions, Improved Restart
+2.87 03/22/2017 16:45 Reworked Interface, streamlined functions, Improved Restart
+2.88 03/22/2017 17:55 Reworked Interface, streamlined functions, Improved Restart
+2.89 03/22/2017 17:57 Reworked Interface, streamlined functions, Improved Restart
+2.9 03/22/2017 17:58 Reworked Interface, streamlined functions, Improved Restart
+2.91 03/22/2017 18:03 Reworked Interface, streamlined functions, Improved Restart
+2.92 03/24/2017 19:08 UI Improvements
+2.93 03/24/2017 19:32 Added DEFAULTDOMAIN to htmlos.conf vars
+2.94 03/24/2017 20:32 Bug Fixes
+2.95 03/24/2017 20:58 Bug Fixes
+2.96 03/24/2017 20:59 Bug Fixes
+2.97 03/24/2017 21:05 Bug Fixes
+2.98 04/12/2017 19:55 Added RSAcert bug fix
+2.99 04/12/2017 20:05 Added support for http and https, should never use http, but support is there if just for testing etc.
+3 04/13/2017 14:22 bug 
+3.01 04/13/2017 14:23 bug 
+3.02 04/15/2017 13:09 UI Tweaks
+3.03 04/15/2017 16:34 Added Unittests Requirement
+3.04 04/16/2017 11:42 Adding support for Automatic SSL
+3.05 04/16/2017 11:53 Adding support for Automatic SSL
+3.06 04/16/2017 12:05 Adding support for Automatic SSL
+3.07 04/19/2017 18:24 Bug Fix, also htmlos.conf is rebuilt without rerunning asetup in most cases
+3.08 04/19/2017 22:08 Added support for https, mostly finished, still needs a lot of polish
+3.09 04/19/2017 22:17 Added support for https, mostly finished, still needs a lot of polish
+3.1 04/19/2017 22:27 Added support for https, mostly finished, still needs a lot of polish
+3.11 04/19/2017 22:28 Added support for https, mostly finished, still needs a lot of polish
+3.12 04/19/2017 23:26 Added support for https, mostly finished, still needs a lot of polish
+3.13 04/19/2017 23:44 Added support for https, mostly finished, still needs a lot of polish
+3.14 04/19/2017 23:45 Added support for https, mostly finished, still needs a lot of polish
+3.15 04/19/2017 23:53 Added support for https, mostly finished, still needs a lot of polish
+3.16 04/20/2017 00:08 Tweaked SSL support, honors "Only" attribute to disbale http
+3.17 04/20/2017 10:56 Added SSL is found domain or accessdomain
+3.18 04/20/2017 12:05 Added SSL is found domain or accessdomain
+3.19 04/20/2017 14:28 UI Tweaks
+3.2 04/20/2017 14:34 UI Tweaks
+3.21 04/20/2017 15:12 Added better error message when alias for acme-challenge not present
+3.22 04/20/2017 15:16 Added better error message when alias for acme-challenge not present
+3.23 04/20/2017 16:02 bug fix
+3.24 04/20/2017 18:22 UI Fixes
+3.25 04/20/2017 18:48 Bug in ACME Scheduler
+3.26 04/20/2017 18:53 Bug in ACME Scheduler
+3.27 04/20/2017 18:56 Bug in ACME Scheduler
+3.28 04/20/2017 19:02 added showifnot()
+3.29 04/20/2017 19:04 added showifnot()
+3.3 04/20/2017 19:12 added showifnot()
+3.31 04/20/2017 19:13 added showifnot()
+3.32 04/20/2017 19:13 added showifnot()
+3.33 04/20/2017 19:14 added showifnot()
+3.34 04/25/2017 19:12 Added http|https buttons to user domain
+3.35 04/25/2017 19:15 Added http|https buttons to user domain
+3.36 04/25/2017 19:22 Added http|https buttons to user domain
+3.37 04/25/2017 19:23 Added http|https buttons to user domain
+3.38 04/25/2017 19:25 Added http|https buttons to user domain
+3.39 04/25/2017 19:28 Added http|https buttons to user domain
+3.4 04/25/2017 19:31 Added http|https buttons to user domain
+3.41 04/25/2017 19:38 Added http|https buttons to user domain
+3.42 04/25/2017 19:44 Added http|https buttons to user domain
+3.43 04/25/2017 19:47 Added http|https buttons to user domain
+3.44 04/25/2017 19:48 Added http|https buttons to user domain
+3.45 05/04/2017 18:07 Run Asetup was incorrect
+3.46 05/08/2017 20:57 Added check. No periods allowed in usernames.
+3.47 05/08/2017 21:00 Added check. No periods allowed in usernames.
+3.48 05/10/2017 23:49 Fixed asetup install issue
+3.49 05/17/2017 16:44 Added reply example
+3.5 05/18/2017 17:25 Reworked OFFLINE TOGGLE Code
+3.51 05/22/2017 22:19 reworked DNS and domain checks for speed and completeness
+3.52 05/22/2017 22:31 reworked DNS and domain checks for speed and completeness
+3.53 05/22/2017 22:50 reworked DNS and domain checks for speed and completeness
+3.54 05/22/2017 22:58 reworked DNS and domain checks for speed and completeness
+3.55 05/22/2017 22:59 reworked DNS and domain checks for speed and completeness
+3.56 08/14/2017 23:31 Added auto add of www domains and subdomains and visa versa
+3.57 09/08/2017 18:05 Added option for Script Extension
+3.58 09/08/2017 18:09 Added option for Script Extension
+3.6 09/09/2017 14:33 Added version to asetup
+3.61 09/09/2017 14:46 Added version to asetup
+3.62 09/09/2017 17:26 Added versions to "Rebuild asetup"
+3.63 09/09/2017 17:30 Added versions to "Rebuild asetup"
+3.64 10/04/2017 22:18 Added XML data structure for users
+3.65 10/04/2017 22:19 Added XML data structure for users
+3.66 10/04/2017 22:21 Added XML data structure for users
+3.67 10/04/2017 22:24 Added XML data structure for users
+3.68 10/04/2017 22:46 Added XML data structure for users
+3.69 10/04/2017 22:53 Added XML data structure for users
+3.7 10/05/2017 14:17 Added json format for user, domain, alias stucture.
+3.71 12/06/2017 15:19 Added Permissions to skeleton in the format filename|700
+3.72 12/06/2017 15:37 Added Permissions to skeleton in the format filename_700
+3.73 12/06/2017 15:45 Added Permissions to skeleton in the format filename_700
+3.74 12/06/2017 15:47 Added Permissions to skeleton in the format filename_700
+3.75 01/04/2018 22:08 Added Log Manager
+3.76 01/04/2018 22:09 Added Log Manager
+3.77 01/06/2018 17:50 big files update
+3.78 01/17/2018 15:55 Fixed https servicetype for user name
+3.79 01/17/2018 15:58 Fixed https servicetype for user name
+3.87 05/29/2018 16:25 Added favicon.png
+3.92 06/05/2018 12:54 Added router() function and updated links to support it
+3.93 06/05/2018 12:59 Added router() function and updated links to support it
+3.94 06/05/2018 13:01 Added router() function and updated links to support it
+3.95 06/05/2018 13:09 Added router() function and updated links to support it
+3.96 06/05/2018 13:10 Added router() function and updated links to support it
+3.97 06/05/2018 13:12 Added router() function and updated links to support it
+3.98 06/05/2018 13:13 Added router() function and updated links to support it
+3.99 06/05/2018 13:14 Added router() function and updated links to support it
+4 06/05/2018 13:15 Added router() function and updated links to support it
+4.01 06/05/2018 13:16 Added router() function and updated links to support it
+4.02 06/05/2018 13:16 Added router() function and updated links to support it
+4.03 06/05/2018 13:25 Added router() function and updated links to support it
+4.04 06/05/2018 13:33 Added router() function and updated links to support it
+4.05 06/05/2018 13:34 Added router() function and updated links to support it
+4.06 06/05/2018 13:37 Added router() function and updated links to support it
+4.07 06/05/2018 13:40 Added router() function and updated links to support it
+4.08 06/05/2018 13:42 Added router() function and updated links to support it
+4.09 06/05/2018 13:47 Added router() function and updated links to support it
+4.1 06/05/2018 13:49 Added router() function and updated links to support it
+4.11 06/05/2018 13:50 Added router() function and updated links to support it
+4.12 06/05/2018 13:59 Added router() function and updated links to support it
+4.14 06/11/2018 21:55 Updated callback links to use /api/imageservices/...
+4.15 06/11/2018 22:07 Updated callback links to use /api/imageservices/...
+4.16 06/11/2018 22:14 Updated callback links to use /api/imageservices/...
+4.17 06/11/2018 22:15 Updated callback links to use /api/imageservices/...
+4.18 06/11/2018 22:18 Updated callback links to use /api/imageservices/...
+4.19 06/11/2018 22:19 Updated callback links to use /api/imageservices/...
+4.2 06/11/2018 23:32 Updated callback links to use /api/imageservices/...
+4.21 06/11/2018 23:39 Updated callback links to use /api/imageservices/...
+4.22 06/11/2018 23:39 Added default domain feature (beta)
+4.45 06/27/2018 18:26 Added clean/dirty caching
+4.46 06/27/2018 18:29 Added clean/dirty caching
+4.47 06/27/2018 18:35 Added clean/dirty caching
+4.48 06/27/2018 18:36 Added clean/dirty caching
+4.49 06/27/2018 18:55 Added clean/dirty caching
+4.89 06/29/2018 19:55 Finalize dirty/clean caching code
+4.9 06/29/2018 20:46 Finalize dirty/clean caching code
+4.91 06/29/2018 20:49 Finalize dirty/clean caching code
+4.92 06/29/2018 20:51 Finalize dirty/clean caching code
+4.93 06/29/2018 20:51 Finalize dirty/clean caching code
+4.94 06/29/2018 20:53 Finalize dirty/clean caching code
+4.95 06/29/2018 20:53 Finalize dirty/clean caching code
+4.96 06/29/2018 20:56 Finalize dirty/clean caching code
+4.97 06/29/2018 21:00 Finalize dirty/clean caching code
+4.98 06/29/2018 21:01 Finalize dirty/clean caching code
+4.99 06/29/2018 21:03 Finalize dirty/clean caching code
+5 06/29/2018 21:10 Finalize dirty/clean caching code
+5.01 06/29/2018 21:17 Finalize dirty/clean caching code
+5.02 06/29/2018 21:21 Finalize dirty/clean caching code
+5.03 06/29/2018 21:28 Finalize dirty/clean caching code
+5.04 06/29/2018 21:32 Finalize dirty/clean caching code
+5.05 06/29/2018 21:38 Finalize dirty/clean caching code
+5.06 06/29/2018 21:39 Finalize dirty/clean caching code
+5.07 06/29/2018 21:41 Finalize dirty/clean caching code
+5.08 06/29/2018 21:43 Finalize dirty/clean caching code
+5.09 06/29/2018 21:45 Finalize dirty/clean caching code
+5.1 06/29/2018 21:46 Finalize dirty/clean caching code
+5.11 06/29/2018 21:49 Finalize dirty/clean caching code
+5.12 06/29/2018 21:51 Finalize dirty/clean caching code
+5.13 06/29/2018 21:54 Finalize dirty/clean caching code
+5.14 06/29/2018 21:56 Finalize dirty/clean caching code
+5.15 06/29/2018 21:57 Finalize dirty/clean caching code
+5.16 06/29/2018 21:58 Finalize dirty/clean caching code
+5.17 06/29/2018 21:59 Finalize dirty/clean caching code
+5.18 06/29/2018 22:01 Finalize dirty/clean caching code
+5.19 06/29/2018 22:08 Finalize dirty/clean caching code
+5.2 06/29/2018 22:10 Finalize dirty/clean caching code
+5.21 06/29/2018 22:23 Finalize dirty/clean caching code
+5.22 06/29/2018 22:30 Finalize dirty/clean caching code
+5.23 06/29/2018 22:35 Finalize dirty/clean caching code
+5.24 06/29/2018 22:39 Finalize dirty/clean caching code
+5.26 06/30/2018 00:15 Added Diff Check Functionality
+5.27 06/30/2018 00:32 Minor UI Tweaks
+5.28 06/30/2018 00:33 Minor UI Tweaks
+5.29 06/30/2018 00:34 Minor UI Tweaks
+5.3 06/30/2018 00:39 Added Diff Check Functionality
+5.31 06/30/2018 00:40 Added Diff Check Functionality
+5.32 06/30/2018 00:41 Added Diff Check Functionality
+5.33 06/30/2018 00:42 Added Diff Check Functionality
+5.34 06/30/2018 00:48 Added Diff Check Functionality
+5.35 06/30/2018 00:51 Added Diff Check Functionality
+5.36 06/30/2018 00:58 Added Diff Check Functionality
+5.37 06/30/2018 01:18 Add flatly bootstrap theme
+5.38 08/01/2018 16:16 Initial Bundle
+5.39 08/01/2018 16:17 Added other paths to keys like... rsa_keypath+'/example..com'
+5.44 08/06/2018 22:06 Added ACCESSDOMAIN to variables for htmlos.conf
+5.45 08/09/2018 17:15 Added Icon
+5.46 08/09/2018 17:16 Added Icon
+5.47 08/09/2018 17:16 Added Icon
+5.48 08/09/2018 17:16 Added Icon
+5.49 08/09/2018 17:20 Added Icon
+5.5 08/09/2018 17:25 Added Icon

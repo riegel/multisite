@@ -1,0 +1,227 @@
+sst=systime
+logit='0, '
+expand file="/system/clearimage/DLL.lib" /expand
+
+
+
+
+
+
+
+
+
+
+function cls() do
+ return ascii(27)+'[2J' /return
+/function
+
+function move(x,y) do
+ return ascii(27)+'['+x+';'+y+'H' /return
+/function
+
+
+function width(text,width,lcr) locals x do
+ if lcr='C' then return left(text+repeat(' ',width),width) /return /if
+ if lcr='R' then return right(repeat(' ',width)+text,width) /return /if
+ return left(text+repeat(' ',width),width) /return
+/function
+
+
+
+function forensics_fixedfit(text,w) locals temp,x do
+ if termwidth='' or termwidth='ERROR' then termwidth=80 /if
+ text=viewsource(text)
+ temp=''
+ if length(text)>w then
+  for name=x value=1 to length(text) step=termwidth-w do
+   if x<>1 then
+    temp=temp+repeat(' ',w)
+   /if
+   temp=temp+replaceall(middle(text,x,x+(termwidth-w)-1),'<','&lt;')+lf
+  /for
+ else
+  temp=temp+replaceall(text,'<','&lt;')+lf
+ /if
+ if right(temp,1)=lf then temp=left(temp,length(temp)-1) /if
+ return temp /return
+/function
+
+function get2col(text,field_separator,record_separator) locals records,record,x,out do
+ out='ERROR'
+ records=split(text,record_separator)
+ for name=records rowname=record do
+  x='ERROR'
+  x[1]=chopchopright(record[1],field_separator)
+  x[2]=chopchopleft(record[1],field_separator)
+  out=appends(out,x)
+ /for
+ return out /return
+/function
+
+
+
+logit=logit+(systime-sst)+', '
+
+procid=trim(system('/bin/echo $PPID'))
+termwidth=trim(system('/usr/bin/tput cols'))
+
+
+procs=split(trimright(syscall('Directory listing','bin/ls /proc')),ascii(10))
+
+logit=logit+(systime-sst)+', '
+
+for name=procs rowname=x do
+ if isinteger(x[1]) then
+  if x[1]=procid then
+    display 'PID: '+x[1]+' '+runtime+' -'+lf /display
+  else
+   cmdline=trim(syscall('cat','bin/cat /proc/'+x[1]+'/cmdline'+RD2GTAMP1))
+   if count(cmdline,'htmlos')>0 or count(cmdline,'start')>0 then
+    runtime=trim(syscall('runtime','bin/ps -p '+x[1]+' -o etime'+RD2GTAMP1))
+    env=get2col(syscall('cat','bin/cat /proc/'+x[1]+'/environ | /usr/bin/tr \\0 \\n'+RD2GTAMP1),'=',lf)
+    if getvalue(env,'HTTPS')='on' then http='https' else http='http' /if
+    y='ERROR' y[1]='URL' y[2]=http+'://'+getvalue(env,'HTTP_HOST')+getvalue(env,'REQUEST_URI') env=appends(y,env)
+    y='ERROR' y[1]='IP'  y[2]=getvalue(env,'REMOTE_ADDR')                                      env=appends(y,env)
+    y='ERROR' y[1]='PID' y[2]=x[1]                                                             env=appends(y,env)
+    for name=env rowname=x do
+     display ' '+width(x[1],25,'L')+'= '+forensics_fixedfit(x[2],28)+lf /display
+    /for
+    display lf /display
+   /if
+  /if
+ /if
+/for
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+display logit+ (systime-sst) +lf /display
+
+
+
+
+
+#
+
+    for name=environ rowname=x do
+     display '  '+x[1]+repeat(' ',27-length(x[1]))+'= '+forensics_fixedfit(x[2],49)+lf /display
+    /for
+
+
+
+
+display ci_ttable( syscall('cat','bin/cat -A /proc/10095/cmdline') )+lf+lf /display
+
+
+
+environ=CSVTOTABLE(replaceall(trim(syscall('cat','bin/cat -A /proc/'+x[1]+'/environ | /usr/bin/tr \\0 \\n'+RD2GTAMP1)),'^@',lf),'=','^')
+for name=i value=1 to length(environ) do
+ m=middle(environ,i,i)
+ a=getascii(m)
+ if a<32 or a>126 then
+  if a=10 or a=13 then
+   display lf /display
+  else
+   display '('+a+')' /display
+  /if
+ else
+  display m /display
+ /if
+/for
+
+
+
+
+23731 /http/root/script/htmlos.oymp-ishk-ub^@/http/root/private/apps/multisite/processes.html^@/http/root/script/htmlos.conf^@ ELAPSED 00:00 
+LESS_TERMCAP_mb=^[[01;31m^@HOSTNAME=ip-172-31-43-109^@LESS_TERMCAP_md=^[[01;38;5;208m^@LESS_TERMCAP_me=^[[0m^@TERM=xterm-256color^@SHELL=/bin/bash^@HISTSIZE=1000^@EC2_AMITOOL_HOME=/opt/aws/amitools/ec2^@SSH_CLIENT=75.165.146.234 61496 22^@LESS_TERMCAP_ue=^[[0m^@SSH_TTY=/dev/pts/0^@USER=root^@LS_COLORS=rs=0:di=38;5;27:ln=38;5;51:mh=44;38;5;15:pi=40;38;5;11:so=38;5;13:do=38;5;5:bd=48;5;232;38;5;11:cd=48;5;232;38;5;3:or=48;5;232;38;5;9:mi=05;48;5;232;38;5;15:su=48;5;196;38;5;15:sg=48;5;11;38;5;16:ca=48;5;196;38;5;226:tw=48;5;10;38;5;16:ow=48;5;10;38;5;21:st=48;5;21;38;5;15:ex=38;5;34:*.tar=38;5;9:*.tgz=38;5;9:*.arc=38;5;9:*.arj=38;5;9:*.taz=38;5;9:*.lha=38;5;9:*.lz4=38;5;9:*.lzh=38;5;9:*.lzma=38;5;9:*.tlz=38;5;9:*.txz=38;5;9:*.tzo=38;5;9:*.t7z=38;5;9:*.zip=38;5;9:*.z=38;5;9:*.Z=38;5;9:*.dz=38;5;9:*.gz=38;5;9:*.lrz=38;5;9:*.lz=38;5;9:*.lzo=38;5;9:*.xz=38;5;9:*.bz2=38;5;9:*.bz=38;5;9:*.tbz=38;5;9:*.tbz2=38;5;9:*.tz=38;5;9:*.deb=38;5;9:*.rpm=38;5;9:*.jar=38;5;9:*.war=38;5;9:*.ear=38;5;9:*.sar=38;5;9:*.rar=38;5;9:*.alz=38;5;9:*.ace=38;5;9:*.zoo=38;5;9:*.cpio=38;5;9:*.7z=38;5;9:*.rz=38;5;9:*.cab=38;5;9:*.jpg=38;5;13:*.jpeg=38;5;13:*.gif=38;5;13:*.bmp=38;5;13:*.pbm=38;5;13:*.pgm=38;5;13:*.ppm=38;5;13:*.tga=38;5;13:*.xbm=38;5;13:*.xpm=38;5;13:*.tif=38;5;13:*.tiff=38;5;13:*.png=38;5;13:*.svg=38;5;13:*.svgz=38;5;13:*.mng=38;5;13:*.pcx=38;5;13:*.mov=38;5;13:*.mpg=38;5;13:*.mpeg=38;5;13:*.m2v=38;5;13:*.mkv=38;5;13:*.webm=38;5;13:*.ogm=38;5;13:*.mp4=38;5;13:*.m4v=38;5;13:*.mp4v=38;5;13:*.vob=38;5;13:*.qt=38;5;13:*.nuv=38;5;13:*.wmv=38;5;13:*.asf=38;5;13:*.rm=38;5;13:*.rmvb=38;5;13:*.flc=38;5;13:*.avi=38;5;13:*.fli=38;5;13:*.flv=38;5;13:*.gl=38;5;13:*.dl=38;5;13:*.xcf=38;5;13:*.xwd=38;5;13:*.yuv=38;5;13:*.cgm=38;5;13:*.emf=38;5;13:*.axv=38;5;13:*.anx=38;5;13:*.ogv=38;5;13:*.ogx=38;5;13:*.aac=38;5;45:*.au=38;5;45:*.flac=38;5;45:*.mid=38;5;45:*.midi=38;5;45:*.mka=38;5;45:*.mp3=38;5;45:*.mpc=38;5;45:*.ogg=38;5;45:*.ra=38;5;45:*.wav=38;5;45:*.axa=38;5;45:*.oga=38;5;45:*.spx=38;5;45:*.xspf=38;5;45:^@EC2_HOME=/opt/aws/apitools/ec2^@LESS_TERMCAP_us=^[[04;38;5;111m^@MAIL=/var/spool/mail/root^@PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/opt/aws/bin:/root/bin^@PWD=/proc/8408/fd^@JAVA_HOME=/usr/lib/jvm/jre^@AWS_CLOUDWATCH_HOME=/opt/aws/apitools/mon^@LANG=en_US.UTF-8^@HISTCONTROL=ignoredups^@SHLVL=1^@HOME=/root^@AWS_PATH=/opt/aws^@AWS_AUTO_SCALING_HOME=/opt/aws/apitools/as^@LOGNAME=root^@AWS_ELB_HOME=/opt/aws/apitools/elb^@SSH_CONNECTION=75.165.146.234 61496 172.31.43.109 22^@LESSOPEN=||/usr/bin/lesspipe.sh %s^@LESS_TERMCAP_se=^[[0m^@_=/http/root/script/htmlos.oymp-ishk-ub^@OLDPWD=/proc/8408^@
+
+6
+
+END
+
+
+
+20961 htmlos.oymp-ishk-ub 20961 (htmlos.oymp-ish) S 19984 7705 7705 0 -1 1077936384 861 0 0 0 1 0 0 0 20 0 1 0 72181012 8335360 1328 18446744073709551615 134512640 136371160 4291061760 4291053660 4152065241 0 0 16781314 0 1 0 0 17 3 0 0 0 0 0 136375256 136986432 168820736 4291062170 4291062190 4291062190 4291063780 0 
+22775 htmlos.oymp-ishk-ub 22775 (htmlos.oymp-ish) S 20324 7705 7705 0 -1 1077936384 861 0 0 0 1 0 0 0 20 0 1 0 72192036 8335360 1329 18446744073709551615 134512640 136371160 4286712112 4286704012 4152196313 0 0 16781314 0 1 0 0 17 2 0 0 0 0 0 136375256 136986432 141582336 4286720410 4286720430 4286720430 4286722020 0 
+22775 htmlos.oymp-ishk-ub 22775 (htmlos.oymp-ish) S 20324 7705 7705 0 -1 1077936384 861 0 0 0 1 0 0 0 20 0 1 0 72192036 8335360 1329 18446744073709551615 134512640 136371160 4286712112 4286704012 4152196313 0 0 16781314 0 1 0 0 17 2 0 0 0 0 0 136375256 136986432 141582336 4286720410 4286720430 4286720430 4286722020 0 
+22775 htmlos.oymp-ishk-ub 22775 (htmlos.oymp-ish) S 20324 7705 7705 0 -1 1077936384 861 0 0 0 1 0 0 0 20 0 1 0 72192036 8335360 1329 18446744073709551615 134512640 136371160 4286712112 4286704012 4152196313 0 0 16781314 0 1 0 0 17 2 0 0 0 0 0 136375256 136986432 141582336 4286720410 4286720430 4286720430 4286722020 0 
+25276 htmlos.oymp-ishk-ub 25276 (htmlos.oymp-ish) S 25251 7705 7705 0 -1 1077936384 860 0 0 0 1 0 0 0 20 0 1 0 72203183 8335360 1313 18446744073709551615 134512640 136371160 4289120528 4289112428 4152114393 0 0 16781314 0 1 0 0 17 3 0 0 0 0 0 136375256 136986432 148029440 4289128858 4289128878 4289128878 4289130468 0 
+
+
+display SUDO+ci_table(procs) /display
+
+/http/root/script/htmlos.oymp-ishk-ub /http/root/private/apps/multisite/processes.html /http/root/script/htmlos.conf > /http/root/private//apps/cron/control/error.txt ; cp /http/root/private//apps/cron/control/error.txt /http/root/private//apps/cron/control/lasterror.txt
+
+
+attr
+auxv
+cgroup
+clear_refs
+cmdline
+comm
+coredump_filter
+cpuset
+cwd
+environ
+exe
+fd
+fdinfo
+gid_map
+io
+latency
+limits
+loginuid
+map_files
+maps
+mem
+mountinfo
+mounts
+mountstats
+net
+ns
+numa_maps
+oom_adj
+oom_score
+oom_score_adj
+pagemap
+personality
+projid_map
+root
+sched
+schedstat
+sessionid
+setgroups
+smaps
+stack
+stat
+statm
+status
+syscall
+task
+uid_map
+wchan
+/#

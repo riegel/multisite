@@ -1,0 +1,347 @@
+<<
+expand file="local.lib" /expand
+expand file="/system/clearimage/DLL.lib" /expand
+
+
+addunittest('OauthCONNECT.echo()','Verify private Amazon API function calls are working.',^
+ if isfile('/apps/api/oauth1/oauth1.lib') then expand file='/apps/api/oauth1/oauth1.lib' /expand /if
+ function test() locals x,commands do
+  if isfile('/apps/api/oauth1/oauth1.lib') then
+   COMMANDS='ERROR'
+   # echo    /#  COMMANDS=UNITTEST_cmd(commands,"trim(system('"+oauth_connect_echo+" Terry Riegel'))","Terry Riegel")
+   x=UNITTEST_runcommands(COMMANDS)
+  else
+   x='ERROR' x[1]='FAIL' x[2]='OauthCONNECT library not installed'
+  /if
+  return x /return
+ /function
+ x=test()
+^)
+
+
+addunittest('OauthCONNECT.openssl()','Verify private Oauth CONNECT function calls are working.',^
+ if isfile('/apps/api/oauth1/oauth1.lib') then expand file='/apps/api/oauth1/oauth1.lib' /expand /if
+ function test() locals x,commands do
+  if isfile('/apps/api/oauth1/oauth1.lib') then
+   COMMANDS='ERROR'
+   # xxd     /#  COMMANDS=UNITTEST_cmd(commands,"OAUTH_hmac_sha1('secretkey','Hello World')","QiK79FBvuHeTLJT6SzV4T1jna/w=")
+   x=UNITTEST_runcommands(COMMANDS)
+  else
+   x='ERROR' x[1]='FAIL' x[2]='OauthCONNECT library not installed'
+  /if
+  return x /return
+ /function
+ x=test()
+^)
+
+
+addunittest('OauthCONNECT.curl()','Verifycurl function call is working.',^
+ if isfile('/apps/api/oauth1/oauth1.lib') then expand file='/apps/api/oauth1/oauth1.lib' /expand /if
+ function test() locals x,commands do
+  if isfile('/apps/api/oauth1/oauth1.lib') then
+   COMMANDS='ERROR'
+   # curl    /#  COMMANDS=UNITTEST_cmd(commands,"IS CURL INSTALLED","COMMENT")
+   # curl    /#  COMMANDS=UNITTEST_cmd(commands,"left(system('usr/bin/curl --help'),24)","Usage: curl [options...]")
+   # curl    /#  COMMANDS=UNITTEST_cmd(commands,"CAN WE REACH GOOGLE","COMMENT")
+   # curl    /#  COMMANDS=UNITTEST_cmd(commands,"left(curl('https://www.google.com/',0,'GET','',''),15)","<!doctype html>")
+   x=UNITTEST_runcommands(COMMANDS)
+  else
+   x='ERROR' x[1]='FAIL' x[2]='OauthCONNECT library not installed'
+  /if
+  return x /return
+ /function
+ x=test()
+^)
+
+
+
+addunittest('timeUTC()','Verify time matches external server time.',^
+ if isfile('/apps/api/oauth1/oauth1.lib') then expand file='/apps/api/oauth1/oauth1.lib' /expand /if
+ function test() locals x,commands do
+  if isfile('/apps/api/oauth1/oauth1.lib') then
+   COMMANDS='ERROR'
+   # Time    /#  COMMANDS=UNITTEST_cmd(commands,"curl('http://clearimageonline.com/app/timeapi/now',0,'GET','','')",nowUTC())
+   x=UNITTEST_runcommands(COMMANDS)
+  else
+   x='ERROR' x[1]='FAIL' x[2]='OauthCONNECT library not installed'
+  /if
+  return x /return
+ /function
+ x=test()
+^)
+
+
+
+
+
+
+
+
+
+
+
+addunittest('multisite.manageusers()','Verify ability to add/remove users',^
+ if isfile('/apps/multisite/defaults.txt') then
+  SUDO=getval('/apps/multisite/defaults.txt','sudo','usr/bin/sudo /')
+ else
+  SUDO='usr/bin/sudo /'
+ /if
+ function test() locals x,commands do
+  COMMANDS='ERROR'
+  # curl    /#  COMMANDS=UNITTEST_cmd(commands,"Can I get root access?","COMMENT")
+  # curl    /#  COMMANDS=UNITTEST_cmd(commands,"left(trim(syscall('adduser'   ,SUDO+'usr/sbin/adduser --help 2>&1')),6)","Usage:")
+  # curl    /#  COMMANDS=UNITTEST_cmd(commands,"left(trim(syscall('userdelete',SUDO+'usr/sbin/userdel --help 2>&1')),6)","Usage:")
+  x=UNITTEST_runcommands(COMMANDS)
+  return x /return
+ /function
+ x=test()
+^)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+addunittest('multisite.root()','Verify root access',^
+ if isfile('/apps/multisite/defaults.txt') then
+  SUDO=getval('/apps/multisite/defaults.txt','sudo','usr/bin/sudo /')
+ else
+  SUDO='usr/bin/sudo /'
+ /if
+ function test() locals x,commands do
+  COMMANDS='ERROR'
+  # curl    /#  COMMANDS=UNITTEST_cmd(commands,"Can I get root access?","COMMENT")
+  # curl    /#  COMMANDS=UNITTEST_cmd(commands,"trim(system(SUDO+'usr/bin/whoami'))","root")
+  x=UNITTEST_runcommands(COMMANDS)
+  return x /return
+ /function
+ x=test()
+^)
+
+
+
+
+ if ID_finished='ERROR' then
+  OauthCONNECT_all_tests_passed='ERROR'
+  nextlink=getlink(page+';echo')
+  ID_finished='STARTED'
+  ID_comma='ERROR'
+  ID_echo='ERROR'
+  ID_openssl='ERROR'
+  ID_time='ERROR'
+  ID_curl='ERROR'
+  ID_manageusers='ERROR'
+  ID_root='ERROR'
+ /if
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  << if isfile('/apps/clear/clear.js') then display ^
+  <script src="/apps/clear/clear.js"></script>
+  <script>
+   CLEAR.f.runOverlay('^+nextlink+^');
+   function expiredAJAX(){window.location.reload(true);}
+  </script>^ /display
+  else
+   if nextlink<>'ERROR' then display ^
+  <meta http-equiv="refresh" content="0;url=^+nextlink+^">^ /display /if /if>>
+  <title>Multisite</title>
+  <<commonheader>>
+ </head>
+ <body class="container">
+  <<nav()>>
+
+  <div class="row">
+   <div class="col-md-12">
+    <h1>Multisite Test Suite</h1>
+    <h2>Testing this system</h2>
+    <div id="message" class="alert alert-success" role="alert"><<message('')>></div>
+   </div>
+  </div>
+
+
+  <div class="row">
+   <div class="col-xs-6">echo</div>
+   <div class="col-xs-6" id="ID_echo"><<showwith('',ID_echo,'')>></div>
+  </div>
+
+  <div class="row">
+   <div class="col-xs-6">openssl</div>
+   <div class="col-xs-6" id="ID_openssl"><<showwith('',ID_openssl,'')>></div>
+  </div>
+
+  <div class="row">
+   <div class="col-xs-6">time</div>
+   <div class="col-xs-6" id="ID_time"><<showwith('',ID_time,'')>></div>
+  </div>
+
+  <div class="row">
+   <div class="col-xs-6">curl</div>
+   <div class="col-xs-6" id="ID_curl"><<showwith('',ID_curl,'')>></div>
+  </div>
+
+
+<<
+if domainname=wrapperdomains[1] then
+
+else
+ display ^
+  <div class="row">
+   <div class="col-xs-6">Add/Delete Users</div>
+   <div class="col-xs-6" id="ID_manageusers">^+showwith('',ID_manageusers,'')+^</div>
+  </div>
+
+
+  <div class="row">
+   <div class="col-xs-6">root (sudo)</div>
+   <div class="col-xs-6" id="ID_root">^+showwith('',ID_root,'')+^</div>
+  </div>^
+ /display
+/if
+>>
+
+  <<if ID_finished='MOSTLY' then ID_finished='ERROR' /if>>
+ </body>
+</html>
+
+
+
+
+<<overlay echo cmd='echo'
+a=rununittest('OauthCONNECT.'+cmd+'()')
+if a[1]='FAIL' then a[1]='<a href="'+getlink('systemfiles.html','ID_finished','ERROR')+'">'+a[1]+'</a>' a[2]=a[2]+'<pre>'+ci_ttable(a)+'</pre>' /if
+writehtml('ID_'+cmd,a[1])
+writehtml('message',a[2])
+if a[1]='PASS' then
+ nextlink=getlink("openssl")
+ runSCRIPT(^CLEAR.f.runOverlay('^+nextlink+^');^)
+else
+ nextlink='ERROR'
+/if
+x='ID_'+cmd @x=a[1]
+message(cmd+' '+a[2])
+endOverlay()
+>>
+
+
+
+
+
+
+<<overlay openssl cmd='openssl'
+a=rununittest('OauthCONNECT.'+cmd+'()')
+if a[1]='FAIL' then a[1]='<a href="'+getlink('systemfiles.html','ID_finished','ERROR')+'">'+a[1]+'</a>' a[2]=a[2]+'<pre>'+ci_ttable(a)+'</pre>' /if
+writehtml('ID_'+cmd,a[1])
+writehtml('message',a[2])
+if a[1]='PASS' then
+ nextlink=getlink("time")
+ runSCRIPT(^CLEAR.f.runOverlay('^+nextlink+^');^)
+else
+ nextlink='ERROR'
+/if
+x='ID_'+cmd @x=a[1]
+message(cmd+' '+a[2])
+endOverlay()
+>>
+
+
+<<overlay time cmd='time'
+a=rununittest('timeUTC()')
+b=a[2]
+if a[1]='FAIL' then b=viewsource(a[2,2]) a[1]=a[1]+" Time Failure. timeUTC() doesn't match external time server. May be temporary." /if
+writehtml('ID_'+cmd,a[1])
+writehtml('message',b)
+if a[1]='PASS' then
+ nextlink=getlink("curl")
+ runSCRIPT(^CLEAR.f.runOverlay('^+nextlink+^');^)
+else
+ nextlink='ERROR'
+/if
+x='ID_'+cmd @x=a[1]
+message(cmd+' '+a[2])
+endOverlay()
+>>
+
+
+<<overlay curl cmd='curl'
+a=rununittest('OauthCONNECT.'+cmd+'()')
+b=a[2]
+if a[1]='FAIL' then b=viewsource(a[2,2]) a[1]=a[1]+" Problems with curl()." /if
+writehtml('ID_'+cmd,a[1])
+writehtml('message',b)
+if a[1]='PASS' then
+ if domainname=wrapperdomains[1] then
+  nextlink=getlink("finished")
+ else
+  nextlink=getlink("manageusers")
+ /if
+ runSCRIPT(^CLEAR.f.runOverlay('^+nextlink+^');^)
+else
+ nextlink='ERROR'
+/if
+x='ID_'+cmd @x=a[1]
+message(b)
+endOverlay()
+>>
+
+
+
+
+<<overlay manageusers cmd='manageusers'
+a=rununittest('multisite.'+cmd+'()')
+b=a[2]
+if a[1]='FAIL' then b=viewsource(a[2,2]) a[1]=a[1]+" Problems with user management."+ci_table(a) /if
+writehtml('ID_'+cmd,a[1])
+writehtml('message',b)
+if a[1]='PASS' then
+ nextlink=getlink("root")
+ runSCRIPT(^CLEAR.f.runOverlay('^+nextlink+^');^)
+else
+ nextlink='ERROR'
+/if
+x='ID_'+cmd @x=a[1]
+message(b)
+endOverlay()
+>>
+
+
+
+<<overlay root cmd='root'
+a=rununittest('multisite.'+cmd+'()')
+b=a[2]
+if a[1]='FAIL' then b=viewsource(a[2,2]) a[1]=a[1]+" Problems with root access."+ci_table(a) /if
+writehtml('ID_'+cmd,a[1])
+writehtml('message',b)
+if a[1]='PASS' then
+ nextlink=getlink("finished")
+ runSCRIPT(^CLEAR.f.runOverlay('^+nextlink+^');^)
+else
+ nextlink='ERROR'
+/if
+x='ID_'+cmd @x=a[1]
+message(b)
+endOverlay()
+>>
+
+
+
+
+<<overlay finished
+ID_finished='MOSTLY'
+OauthCONNECT_all_tests_passed='TRUE'
+b=^Everything Looks Good.^
+writeHTML('message',b)
+nextlink='ERROR'
+message(b)
+endOverlay()
+>>

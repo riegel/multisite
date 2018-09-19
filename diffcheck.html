@@ -1,0 +1,20 @@
+<<
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ expand file="/apps/multisite/addsite.lib" /expand
+
+ if isdirty('/apps/multisite','virtualhosts')='TRUE' then
+  rebuild_virtual_hosts()
+ /if
+
+
+
+ copy file='/apps/multisite/.TEMP/virtual_hosts_ready.txt' to config /copy
+ cp(VHOSTSFILE,ci_getpath('/apps/multisite/virtual_hosts.txt'))
+ copy file="/apps/multisite/virtual_hosts.txt" to liveconfig /copy
+
+ leftdiff=liveconfig rightdiff=config
+ lefttext='Live'
+ righttext='Modifications'
+ goto '/apps/diffcheck/index.html'
+>>

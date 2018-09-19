@@ -1,0 +1,57 @@
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="/apps/multisite/local.lib" /expand
+ expand file="/apps/multisite/addsite.lib" /expand
+
+ message='Getting Started'+lf
+ if isfunction('progress') then progress('Getting Started') /if
+
+
+ copy file="/apps/multisite/template/virtualhosts.txt" to temp1 /copy
+ copy file="/apps/multisite/template/virtualhosts_cache.txt" to temp2 /copy
+ copy file="/apps/multisite/template/virtualhosts_default.txt" to temp3 /copy
+ copy file="/apps/multisite/template/virtualhosts_default_cache.txt" to temp4 /copy
+ if temp1=temp2 and temp3=temp4 then
+  make_clean('/apps/multisite','virtualhoststemplates')
+ else
+
+  make_dirty('/apps/multisite','virtualhosts')
+  make_dirty('/apps/multisite','virtualhoststemplates')
+  make_dirty('/apps/multisite','virtualhostsapache')
+
+  users=multisite_users()
+  for name=users rowname=x do
+   make_dirty('/apps/multisite',i[n_USER])
+  /for
+ /if
+
+ if isfunction('progress') then progress('Templates checked') /if
+
+
+ if isdirty('/apps/multisite','virtualhosts')='TRUE' then
+  if isfunction('progress') then progress('rebuild_virtual_hosts') /if
+  message=message+'rebuild_virtual_hosts'+lf
+  rebuild_virtual_hosts()
+ /if
+
+ if isclean('/apps/multisite','virtualhostsapache')='TRUE' then
+  users=multisite_users()
+  for name=users rowname=u do
+   if left(u[1],length(USERPREFIX))=USERPREFIX then
+    a=fileinfo('/apps/multisite/users/'+u[1]+'/domains_cache.txt') 
+    if isdirty('/apps/multisite',u[1])='TRUE' or abs(timebetween(now,a[3],'minutes'))>10 then
+     if isfunction('progress') then progress('check connections for '+u[1]) /if
+     message=message+'check connections for '+u[1]+lf
+     copy file="/apps/multisite/users/"+sites_site+"/domains.txt" ts="," to userdomains /copy
+     userdomains=verify_user_domains(userdomains)
+     userdomains=check_connections_user_domains(userdomains)
+     copy userdomains to file="/apps/multisite/users/"+sites_site+"/domains_cache.txt" ts="," /copy
+     if isclean('/apps/multisite','virtualhosts')='TRUE' then
+      make_clean('/apps/multisite',u[1])
+      sysrm('/apps/multisite/users/'+u[1]+'/domains_cache.txt')
+     /if
+    /if
+   /if
+  /for
+ /if
+ message=message+'Finished'
+

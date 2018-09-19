@@ -1,0 +1,77 @@
+<<
+   # Simple list generator from a directory /#
+
+   entitydir           =  '/apps/multisite/api/authenticatedusers/'
+   entitytext          =  'API User'
+   entitytexts         =  entitytext+'s'
+   api_user            =  entity_var
+   entity_detail_page  =  'apiaccess_view.html'
+
+if entity_var<>'' and entity_var<>'ERROR' and isfile(entitydir+aestivafilename(entity_var)+'.txt') then entity_var='ERROR' goto entity_detail_page /if
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Manage <<entitytexts>></title>
+  <<commonheader>>
+ </head>
+ <body class="container">
+  <<nav()>>
+  <div class="row">
+   <div class="col-md-12">
+    <p>API Access requires route to be installed and all /api/multisite/... request to be sent to /apps/multisite/api/authenticate.overlay The multisite API uses oAuth1.0a to authenticate all requests.</p>
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-md-12">
+    <h1><<entitytexts>></h1>
+    <h2><<message('')>></h2>
+    <p>Manage <<entitytexts>> here.</p>
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-md-12">
+    <h4>Choose Existing <<entitytext>></h4>
+    <div class="list-group">
+    <<
+     temp=sysls(entitydir)
+     for name=temp rowname=x do
+      if x[1]<>'.TEMP' and right(x[1],4)='.txt' then
+       entity=left(x[1],length(x[1])-4)
+       display '<a href="'+page+'" name="entity_var" value="'+entity+'" class="list-group-item"><b>'+entity+'</b></a>' /display
+      /if
+     /for
+    >>
+    </div>
+   </div>
+  </div>
+  <div class="row">
+   <div class="col-md-12">
+    <h4>Add a new <<entitytext>></h4>
+    <form action="newentity" method="post">
+     <div class="input-group">
+      <input type="text" name="entity_var" class="form-control" placeholder="<<entitytext>> Name">
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="submit" name="mybutton" value="ADD">Add</button>
+      </span>
+     </div><!-- /input-group -->
+    </form>
+   </div>
+ </body>
+</html>
+<<overlay newentity
+ if entity_var='' or entity_var='ERROR' then message('Missing Value') goto page /if
+
+ entity_var = lower(aestivafilename(entity_var))
+ thekey     = e_(entity_var+'|salty-'+hash(entity_var)+'.')
+ apisecret  = hash(entity_var)+'x'+random(1000,9999)+'x'+random(1000,9999)
+ thesecret  = e_(apisecret)
+
+ temp='ConsumerKey="'       + thekey    + '"'+lf+
+      'ConsumerSecret="'    + thesecret + '"'+lf+
+      'APISecret="'         + apisecret + '"'+lf
+
+ copy temp to file=entitydir+entity_var+'.txt' /copy
+ goto page
+>>

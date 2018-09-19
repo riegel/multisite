@@ -1,0 +1,211 @@
+ # File Formats
+ # CSV
+ # JSON
+ # HTML
+ # XML
+/#
+
+
+function vars2table(vars,thetable) locals x,temp,text do
+ temp=split(vars,',')
+ text=''
+ for name=temp rownum=x do
+  text=text+thetable+'[1,'+x+']="'+temp[1,x]+'"'+lf
+  text=text+thetable+'[2,'+x+']='+temp[1,x]+lf
+ /for
+ return text /return
+/function
+
+
+
+function ci_tablemerge(table_names,table_values) locals x,y,table do
+ table='ERROR'
+ for name=table_values rownum=y do
+  for name=table_values colnum=x do
+   if table_names[x,y]='' and table_values[x,y]='' then
+    table[x,y]=''
+   else
+    table[x,y]=table_names[x,y]+'="'+table_values[x,y]
+   /if
+  /for
+ /for
+ return table /return
+/function
+
+
+
+
+
+function csvheaders(table_names,table_values) locals text,y,x do
+ text=''
+ for name=table_values rownum=y do
+  for name=table_values colnum=x do
+   if table_names[x,y]='' then
+
+   else
+    text=text+'X-CSV-'+table_names[x,y]+' : '+table_values[x,y]+lf
+   /if
+  /for
+ /for
+ if text='' then
+  return '' /return
+ else
+  return left(text,length(text)-1) /return
+ /if
+/function
+
+
+
+
+
+
+
+function webpush_table(vars,headers,messages,fileformat) locals rw,cl,
+ E1,S1,LF1,CR1,Q1,C1,AMP,
+ temp,mimetype,searchresults,
+ fields,x,headervars
+do
+
+ headervars=''
+
+ if fileformat='csv' or fileformat='hcsv' then
+   mimetype='text/csv'
+
+   if fileformat='hcsv' then
+    temp=append(headers,messages)
+   else
+    temp=messages
+   /if
+   rw=rows(temp) cl=cols(temp)
+
+   temp=tabletocsv(temp)
+
+temp=replaceall(temp,'^"','""')
+
+
+
+   for name=vars rowname=x do
+    headervars=showwith('',headervars,cr+lf)+'api_'+x[1]+': '+postprep(x[2])
+   /for
+
+   headervars=showwith('',headervars,cr+lf)+'api_rows: '+postprep(rw)
+   headervars=showwith('',headervars,cr+lf)+'api_cols: '+postprep(cl)
+
+   for name=headers colnum=x do
+    headervars=showwith('',headervars,cr+lf)+'api_col'+x+': '+postprep(headers[x,1])
+   /for
+
+
+
+
+ elif fileformat='json' then
+
+   mimetype='application/json'
+   temp=tabletocsv(messages)
+   temp=replaceall(temp,'"'+lf+'"','"],["')
+   temp=replaceall(temp,'\','\\')
+   temp=replaceall(temp,'/','\/')
+   temp=replaceall(temp,'^"','\"')
+   temp=replaceall(temp,lf,'\n')
+   temp=replaceall(temp,cr,'\r')
+   temp=replaceall(temp,ascii(8),'\b')
+   temp=replaceall(temp,ascii(9),'\t')
+   temp=replaceall(temp,ascii(12),'\f')
+
+   if temp='""' then temp="[]" else temp='[['+temp+']]' /if
+
+   fields=^"fields":[^
+   for name=headers colname=x do
+    fields=fields+^"^+x[1]+^",^
+   /for
+   fields=left(fields,length(fields)-1)+^],^
+
+   thevars=''
+   for name=vars rowname=x do
+    thevars=showwith('',thevars,',')+'"'+x[1]+'":"'+CLEAR_JSONescape(x[2])+'"'
+   /for
+
+
+   temp='{'+showwith('',thevars,',')+'"rows":"'+rows(messages)+'","columns":"'+cols(messages)+'",'+fields+'"data":'+temp+'}'
+
+
+ elif fileformat='xml' then
+
+   mimetype='application/xml'
+
+   E1='{'+usernum+'_END_OF_LINE}'
+   S1='{'+usernum+'_FIELD_SEPERATOR}'
+   LF1='{'+usernum+'_LF}'
+   CR1='{'+usernum+'_CR}'
+
+   AMP='&amp;'
+   Q1='&quot;'
+   A1='&apos;'
+   L1='&lt;'
+   G1='&gt'
+
+   fields=^<fields>^
+   for name=headers colnum=x do
+    fields=fields+^<field column="^+x+^">^+headers[x,1]+^</field>^
+   /for
+   fields=fields+^</fields>^
+
+
+   thevars=''
+   for name=vars rowname=x do
+    thevars=thevars+'<'+x[1]+'>'+x[2]+'</'+x[1]+'>'
+   /for
+
+
+   temp=replace(tabletocsv(messages),'"','')
+   temp=replaceall(temp,'"'+lf+'"',E1)
+   temp=replaceall(temp,lf,LF1)
+   temp=replaceall(temp,'","',S1)
+   temp=replaceall(temp,'^"',Q1)
+   temp=left(temp,length(temp)-1)
+
+   temp=replaceall(temp,'&',AMP)
+   temp=replaceall(temp,'"',Q1)
+   temp=replaceall(temp,"'",A1)
+   temp=replaceall(temp,'<',L1)
+   temp=replaceall(temp,'>',G1)
+
+   temp=replaceall(temp,LF1,lf)
+   temp=replaceall(temp,CR1,cr)
+
+
+
+   temp=replaceall(temp,E1,'</col></row><row><col>')
+   temp=replaceall(temp,S1,'</col><col>')
+   temp='<?xml version="1.0" encoding="UTF-8" ?>'+
+        '<document>'+thevars+
+        '<columns>'+cols(messages)+'</columns>'+
+        '<rows>'+rows(messages)+'</rows>'+
+         fields+
+        '<data>'+
+        '<row><col>'+temp+'</col></row>'+
+        '</data>'+
+        '</document>'
+
+
+ else
+   temp='ERROR'
+ /if
+
+
+ # 
+ #  headers='X-usernum: '+usernum
+/#
+
+ if temp='ERROR' then
+  goto error('400|Unknown Request-'+fileformat+'|'+filetype)
+ else
+  webpush(temp,mimetype+showwith(cr+lf,headervars,''))
+ /if
+
+
+
+
+/function
+
+

@@ -1,0 +1,99 @@
+<<
+ # 
+ #  thekey     = e_(entity_var+'|salty-'+hash(entity_var)+'.')
+ #  thesecret  = e_(e_(entity_var))
+ # 
+ #  temp='ConsumerKey="'       + thekey    + '"'+lf+
+ #       'ConsumerSecret="'    + thesecret + '"'+lf
+ #       'APISecret="'         + apisecret + '"'+lf
+/#
+###########
+#
+# BEGIN AUTHENTICATE REQUEST
+#
+#########/#
+ expand file="/apps/api/oauth1/oauth1.lib" /expand
+ APIMETHOD=getval('/apps/multisite/defaults.txt','apimethod'   ,'RSA-SHA1')
+
+ function OAUTH_lookup(key,sig_method) locals consumerkey,ConsumerSecret,apisecret do
+  userid=d_(key)
+  if count(userid,'|')=0 or right(userid,1)<>'.' then
+   return 'ERROR: Unknown Key' /return
+  else
+   userid=split(userid,'|')
+   if isfile('/apps/multisite/api/authenticatedusers/'+userid[1,1]+'.txt') then
+    if sig_method<>APIMETHOD then
+     return 'ERROR: Signatue Method Not Allowed '+APIMETHOD+' is required.' /return
+    /if
+    if sig_method='HMAC-SHA1' then
+     expand file='/apps/multisite/api/authenticatedusers/'+userid[1,1]+'.txt' /expand
+     temp=e_(apisecret)
+     if ConsumerSecret=temp then
+      return temp /return
+     else
+      return 'ERROR: Unauthorized Key' /return
+     /if
+    else
+
+
+     if isfile('/apps/multisite/api/authenticatedusers/'+userid[1,1]+'.pem') then
+      return '/apps/multisite/api/authenticatedusers/'+userid[1,1]+'.pem' /return
+     else
+      return 'ERROR: Missing Public Key' /return
+     /if
+
+
+
+     return 'ERROR: Signatue Method Not Supported' /return
+    /if
+   else
+    return 'ERROR: Key lookup Failure' /return
+   /if
+  /if
+ /function
+
+ # Start Clean up TTL0 /#
+ TTL0path='/apps/multisite/api/TTL0/'
+ temp=filelist(TTL0path)
+ for name=temp rowname=x do
+  if abs(timebetween(x[3],now,'minutes'))>0 then
+   temp1=ci_rmimage(TTL0path+x[1])
+  /if
+ /for
+ # End Clean up TTL0 /#
+
+
+ if getenv('HTTPS')<>'on' then 
+  goto error('401|This service requires HTTPS|JSON')
+ /if
+
+ if getenv('HTTPS')<>'on' then 
+  protocol='http://'
+ else
+  protocol='https://'
+ /if
+
+
+
+ if getenv('REQUEST_METHOD')='POST' then data=sysstdin else data=tag_vars /if
+ A=OAUTH_verify(protocol+getenv('HTTP_HOST')+getenv('REQUEST_URI'),getenv('REQUEST_METHOD'),getenv('HTTP_AUTHORIZATION'),data)
+ if left(a[1],5)='ERROR' then
+  goto error('401|'+replaceall(a,'|','[PIPE]')+'|JSON')
+ elif a[1]>10 then
+  goto error('401|Bad Time Signature|JSON')
+ elif isfile(TTL0path+a[2]+'_'+a[3]+'_'+a[4]+'.txt') then
+  goto error('401|Duplicate Request|JSON')
+ /if
+ copy now to file=TTL0path+a[2]+'_'+a[3]+'_'+a[4]+'.txt' /copy
+
+###########
+#
+# END AUTHENTICATE REQUEST
+#
+#########/#
+
+if tag_[3]='ver1' then goto '/apps/multisite/api/ver1/router.overlay' /if
+
+goto error('400|Unknown Version ('+tag+')|JSON')
+
+>>

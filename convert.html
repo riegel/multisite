@@ -1,0 +1,191 @@
+<<
+expand file="/system/clearimage/DLL.lib" /expand
+expand file="/apps/multisite/addsite.lib" /expand
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title></title>
+ </head>
+ <body>
+  <a href="<<page>>">RELOAD</a><hr>
+  <h1>Multisite Update</h1>
+  <p>Hello, we need to update your data structure for this version of multisite.</p>
+  <p>All existing user data found at...</p>
+  <code>/apps/multisite/users/{USER}/domains.txt</code>
+  <p>will remain, but will no longer be used. The data will be pulled from /apps/multisite/users/users.xml</p>
+  <a href="convertstep1">Begin Step 1 of 2</a>
+  <<message(0)>>
+ </body>
+</html>
+<<overlay convertstep1
+
+
+ #  File Formatted as follows
+ #
+ #  1           2               3             4            5               6            7             8                  9
+ #  DOMAIN      HTMLOS          HTTPS         OFFLINE      DEFAULTDOMAIN   HTTP@DOMAIN  HTTPS@DOMAIN  HTTP@ACCESSDOMAIN  HTTPS@ACCESSDOMAIN
+ #------------------------------------------------------------------------------------------------------------------------------------------
+ #  FQDN        "YES" or "no"   "YES" OR ""   "YES" or ""  "YES or ""      "YES or ""   "YES or ""    "YES or ""         "YES or ""
+ # 
+ # 1 - This is the refered to domain and never includes ACCESSDOMAIN in it.
+ # 2 - HTMLOS, This flag determines if the domain is an alias or a real HTML/OS domain
+ # 3 - This is the HTTPS flag for domain, if we are successful at http then this will be "YES" to ready for HTTPS
+ # 4 - Either "YES" or "" if yes all requests will return a offline response
+ # 5 - This is the default domain for the user, can be used when visitors go to the user.accessdomain version of the site
+ # 6 - This is the HTTPS flag for domain.accessdomain, if we are successful at http then this will be "YES" to ready for HTTPS
+ # 7 - Last real world connection results to the domain over https
+ # 8 - Last real world connection results to the domain.accessdomain over https
+ # 
+ # Fields 3,6,7,8 are computed
+/#
+
+
+ function trimtrailingcomma(json) do
+  if right(json,1)=',' then 
+   return left(json,length(json)-1) /return
+  elif right(json,2)=',/' then 
+   return left(json,length(json)-2)+'/' /return
+  else
+   return json /return
+  /if
+ /function
+
+
+ found='ERROR'
+ xml=''
+ xml=xml+'<root/>'
+ json=''
+ json=json+'{/'
+ users=multisite_users() # Will return users for server or users for wrapperdomain /#
+ json=json+'  "user" : [/'
+ for name=users rowname=x do
+  if left(x[1],length(USERPREFIX))=USERPREFIX then
+   uname=replace(x[1],USERPREFIX,'')
+   xml=xml+' <user/>'
+   json=json+'    {/'
+   if isfile('/apps/multisite/users/'+x[1]+'/domains.txt') then
+    copy file='/apps/multisite/users/'+x[1]+'/domains.txt' ts=',' to domains /copy
+    i=1
+    indomain='ERROR'
+    aliaslist=''
+    aliasjsonlist=''
+    inalias='ERROR'
+    start=2
+    i_y=1
+    for name=domains rowname=y do
+     if i=1 then
+      xml=xml+'  <name>'+uname+'</name/>'
+      json=json+'      "name" : "'+uname+'",/'
+
+      if y[4]='yes' then online='false' else online='true' /if
+      if y[3]='yes' then servicetype='HTTPS' else servicetype='HTTP' /if
+
+      xml=xml+'  <online>'+ online+'</online/>'
+      xml=xml+'  <servicetype>'+servicetype+'</servicetype/>'
+
+      json=json+'      "online" : '+online+',/'
+      json=json+'      "servicetype" : "'+servicetype+'",/'
+
+      json=json+'      "domain" : [/'
+
+     elif i=2 then
+      indomain='true'
+     /if
+     if i>1 then
+      if y[2]='yes' then
+       enddomain=^
+       if i>start then
+        if aliaslist<>'' then
+         xml=xml+'    <alias>'+aliaslist+'</alias/>'
+         json=json+'          "alias" : ["'+aliasjsonlist+'"],/'
+         aliaslist=''
+         aliasjsonlist=''
+        /if
+       /if
+       if i<>start then
+        xml=xml+'  </domain/>'
+        json=trimtrailingcomma(json)+'        },/'
+
+       /if^ $(enddomain)
+       if indomain='TRUE' then
+        xml=xml+'  <domain/>'
+        json=json+'        {/'
+       /if
+       xml=xml+'    <name>'+y[1]+'</name/>'
+       json=json+'          "name" : "'+y[1]+'",/'
+
+       if y[4]='yes' then online='false' else online='true' /if
+       if y[3]='yes' then servicetype='HTTPS' else servicetype='HTTP' /if
+
+       xml=xml+'    <online>'+online+'</online/>'
+       xml=xml+'    <servicetype>'+servicetype+'</servicetype/>'
+
+       json=json+'          "online" : '+online+',/'
+       json=json+'          "servicetype" : "'+servicetype+'",/'
+
+
+
+       inalias='ERROR'
+      else
+       aliaslist=aliaslist+showif('</alias/>    <alias>',aliaslist)+y[1]
+       aliasjsonlist=aliasjsonlist+showif('","',aliasjsonlist)+y[1]
+       if i=start then
+        start=start+1
+       else
+        inalias='true'
+       /if
+      /if
+     /if
+     i=i+1
+    /for
+    $(enddomain)
+    json=trimtrailingcomma(json)+'      ]/'
+   else
+    xml=xml+'  <name>'+uname+'</name/>'
+    json=json+'      "name" : "'+uname+'",/'
+
+    if y[4]='yes' then online='false' else online='true' /if
+    if y[3]='yes' then servicetype='HTTPS' else servicetype='HTTP' /if
+
+    xml=xml+'  <online>'+online+'</online/>'
+    xml=xml+'  <servicetype>'+servicetype+'</servicetype/>'
+
+    json=json+'      "online" : '+online+',/'
+    json=json+'      "servicetype" : "'+servicetype+'",/'
+
+
+
+   /if
+   xml=xml+' </user/>'
+   json=trimtrailingcomma(json)+'    },/'
+  /if
+  i_y=i_y+1
+ /for
+ xml=xml+'</root/>'
+ json=trimtrailingcomma(json)+'  ]/'
+ json=trimtrailingcomma(json)+'}/'
+
+xml1=replaceall(xml,'/>','>'+lf)
+json1=replaceall(json,'/',lf)
+
+
+theXMLtable=XMLnamevalue(xml1)
+theJSONtable=JSONnamevalue(json1)
+
+
+
+
+
+message('Step1 Finished. Click to <a href="convert">finish</a><hr>'+ci_table(theJSONtable)+'<hr><pre>'+json1+'</pre><hr><pre>'+replaceall(replaceall(viewsource(xml),'/&gt;','&gt;<br>'),'','')+'</pre>')
+goto page
+>>
+
+<<overlay convert
+ copy xml1 to file='/apps/multisite/users/users.xml' /copy
+ sysfixprivate('/apps/multisite/users/users.xml')
+ copy json1 to file='/apps/multisite/users/users.json' /copy
+ sysfixprivate('/apps/multisite/users/users.json')
+ goto 'index.html'
+>>

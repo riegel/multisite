@@ -1,0 +1,38 @@
+# {USER}
+# DOMAIN         {DOMAIN}
+# USER           {USER}
+# SHORTUSER      {SHORTUSER}
+# SCRIPTDOMAIN   {SCRIPTDOMAIN}
+# ACCESSDOMAIN   {ACCESSDOMAIN}
+# ISHTTPS        {ISHTTPS}
+# ISHTTP         {ISHTTP}
+# SITEROOT       {SITEROOT}
+# SSLCERT        {SSLCERT}
+# SSLKEY         {SSLKEY}
+# SSLCERTCA      {SSLCERTCA}
+# OFFLINE        {OFFLINE}
+# DEBUG          {DEBUG}
+<VirtualHost {showif('*:443 ',ISHTTPS)}{showif('*:80',ISHTTP)}>
+ #DOMAIN {DOMAIN}
+ ServerName {DOMAIN}
+ ServerAlias {DOMAIN}.{ACCESSDOMAIN}
+ VirtualDocumentRoot "{SITEROOT}{USER}/public/"
+ VirtualScriptAlias "{SITEROOT}{USER}{SCRIPTDOMAIN}"
+ CustomLog {SITEROOT}{USER}/logs/access.log common
+ ErrorLog {SITEROOT}{USER}/logs/error.log
+ ServerAdmin riegel@clearimageonline.com
+ DirectoryIndex index.html
+ Alias "/.well-known" "/http/root/public/.well-known"
+ Options -Indexes +FollowSymLinks +Includes
+ <directory {SITEROOT}{USER}{SCRIPTDOMAIN}>
+  Include /etc/httpd/conf/script.common
+ </directory>
+ {showif('Include /etc/httpd/conf/https.common',ISHTTPS)}
+ {showif('SSLCertificateKeyFile ',SSLKEY)}{SSLKEY}
+ {showif('SSLCertificateFile ',SSLCERT)}{SSLCERT}
+ {showif('SSLCertificateChainFile ',SSLCERTCA)}{SSLCERTCA}
+ SuexecUserGroup {USER} {USER}
+ {showif(' RewriteEngine on',OFFLINE)}
+ {showif(' RewriteRule .*$ / [L,R=503]',OFFLINE)}
+</virtualhost>
+

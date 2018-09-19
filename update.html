@@ -1,0 +1,17 @@
+<<
+
+goto '/apps/appmanager/index.html'
+
+
+multisiteinit='ERROR'
+expand file="/system/clearimage/DLL.lib" /expand
+expand file="/apps/appmanager/appmanager.lib" /expand
+copy file='appid.txt' ts=',' to appid /copy
+apps=appmanager_getsource(appid[app.source],'TRUE',1)
+temp=appmanager_installapp(appid)
+goto router('/')
+>>
+<!doctype html>
+<html lang="en">
+ Never get here
+</html>

@@ -1,0 +1,70 @@
+<<
+if OauthCONNECT_all_tests_passed='TRUE' then
+ temp='All Tests Passed'
+else
+ temp=''
+/if
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite</title>
+  <<commonheader>>
+ </head>
+ <body class="container">
+  <<nav()>>
+  <div class="row">
+   <div class="col-md-12">
+    <h1>Multisite for HTML/OS</h1>
+    <h2>HTML/OS installation management</h2>
+    <p>With HTML/OS Multisite, run multiple Aestiva installations on a single server. Run multiple domains on a single site.</p>
+    <div class="list-group">
+     <a href="<<router('/system-tests')>>"         class="list-group-item">System Tests<<showwith(' <small>(',temp,')</small>')>></a>
+
+
+<<
+ copy file="/apps/multisite/appid.txt" ts="," to appid /copy
+ apps=appmanager_getsource(appid[13],'TRUE',1)
+ found='ERROR'
+ for name=apps rowname=x do
+  if x[app.name]=appid[app.name] then found=x BREAK /if
+ /for
+ if found<>'' and found<>'ERROR' and x[app.server_ver]>appid[app.version] then
+  updatemultisite='Update Multisite (outdated version '+appid[app.version]+') <span class="badge">'+x[app.server_ver]+'</span>'
+ elif found='ERROR' then
+  updatemultisite='Multisite (current version '+appid[app.version]+') <span class="badge">not found</span>'
+ else
+  updatemultisite='Re-Install Multisite (current version '+appid[app.version]+') <span class="badge">'+x[app.server_ver]+'</span>'
+ /if
+  links[1,2]=getlink('/apps/multisite/update.html','returnlink',page)
+>>
+
+     <a href="<<router('/update')>>"                class="list-group-item"><<updatemultisite>></a>
+
+
+
+     <a href="<<router('/config')>>"                class="list-group-item">View Apache Virtual Hosts Config</a>
+
+
+
+
+     <a href="<<router('/site')>>"                  class="list-group-item">List Sites</a>
+     <<
+       if domainname=wrapperdomains[1] then
+
+       else
+        display ^     <a href="^+router('/api')+^"                  class="list-group-item">Manage API Access</a>^ /display
+       /if
+     >>
+     <a href="<<router('/preferences/settings')>>" class="list-group-item">Settings</a>
+     <a href="<<router('/logs')>>"                 class="list-group-item">Big Files</a>
+     <a href="<<router('/templates')>>"            class="list-group-item">Templates</a>
+     <<if keymanager='TRUE' then display ^
+     <a href="<<router('/keymanager')>>" class="list-group-item">Key Manager <small>(plugin)</small></a>
+     ^ /display /if>>
+    </div>
+   </div>
+  </div>
+ </body>
+</html>

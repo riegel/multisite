@@ -1,0 +1,48 @@
+<<
+ copy file='/system/clearimage/version.txt' to temp /copy
+
+
+ if (0+temp)<=4.30 then goto error('410|Multisite requires base library 4.18 or newer. Currently it is ('+temp+')') /if
+
+
+ if isdir('/apps/unittests') then
+  if isfile('/apps/unittests/unittests.db') then
+
+  else
+   dbcreate('/apps/unittests/unittests')
+  /if
+ else
+   goto error('410|Multisite requires Unittests, Use the App Manager to install Unit Tests.')
+ /if
+
+ #
+ #  When domainname=wrapperdomains[1] then we know multisite is running as multisite Wrapper
+ # 
+/#
+
+
+
+ entity_var='ERROR'
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ expand file="addsite.lib" /expand
+
+
+
+
+ # Check to see if old data structure is being used, if so redirect to convert page /#
+
+
+ if isfile('/apps/multisite/users/users.json')='FALSE' AND 0+multisite_info('version','')<4.00 then goto 'convert.html' /if
+
+
+
+ if OauthCONNECT_all_tests_passed='TRUE' then
+  temp='All tests passed'
+ else
+  temp=''
+ /if
+ sites_site='ERROR'
+
+ goto 'users-list.html'
+>>

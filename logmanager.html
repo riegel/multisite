@@ -1,0 +1,214 @@
+<<
+if onlyshow='ERROR' then onlyshow='log' /if
+
+function size(s,kind) locals g,m,k,b do
+ b=''
+ if isnumber(s) then
+  g=1024*1024*1024
+  m=1024*1024
+  k=1024
+  if s>g then
+   s=format(s/g,"NORMAL",2)+"&nbsp;GB" b=" ("+s+" bytes)"
+  elif s>m then
+   s=format(s/m,"NORMAL",1)+"&nbsp;MB" b=" ("+s+" bytes)"
+  elif s>k then
+   s=format(s/k,"NORMAL",1)+"&nbsp;KB" b=" ("+s+" bytes)"
+  else
+   s=s+"&nbsp;bytes" b=''
+  /if
+ /if
+ if kind='short' then
+  return s /return
+ else
+  return s+b /return
+ /if
+/function
+
+
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ copy file="/apps/hosting/bigfiles.txt" ts=":" to bigs /copy
+ bigs2='ERROR'
+ bigs3='ERROR'
+ total=0
+ totallog=0
+ totalpak=0
+ totaldb=0
+
+ file.size=1
+ file.user=2
+ file.group=3
+ file.permissions=4
+ file.date=5
+ file.type=6
+ file.kind=7
+ file.name=8
+ file.path=9
+ file.originalsize=10
+
+
+
+
+testtable='ERROR'
+ for name=bigs rowname=x do
+  x[1]=(1*(x[1]+0))
+  if x[1]='' or x[1]='ERROR' then
+
+  else
+   a=listtorow(syscall('get size',SUDO+'bin/ls -al --time-style=full-iso '+x[2]),' ')
+
+
+   b='ERROR'
+   b[file.size]=(1*(a[5]+0))
+   b[file.originalsize]=x[1]
+   b[file.user]=a[3]
+   b[file.group]=a[4]
+   b[file.permissions]=a[1]
+   b[file.date]=dateToHTMLOS(a[6],'Y M D')
+   if count(x[2],'/users/user_')>0 and count(x[2],'/private/')>0 then b[file.type]='PRIVATE' /if
+   if count(x[2],'/users/user_')>0 and count(x[2],'/public/' )>0 then b[file.type]='PUBLIC'  /if
+   if count(x[2],'/users/user_')>0 and count(x[2],'/logs/'   )>0 then b[file.type]='LOGS'    /if
+
+   if count(x[2],'/http/root/')>0 and count(x[2],'/private/')>0 then b[file.type]='PRIVATE' /if
+   if count(x[2],'/http/root/')>0 and count(x[2],'/public/' )>0 then b[file.type]='PUBLIC'  /if
+   if count(x[2],'/http/root/')>0 and count(x[2],'/logs/'   )>0 then b[file.type]='LOGS'    /if
+
+
+   b[file.name]=reverse(chopchopright(reverse(x[2]),'/'))
+   b[file.kind]=reverse(chopchopright(reverse(b[file.name]),'.'))
+   b[file.path]=x[2]
+   total=total+b[file.size]
+   if b[file.kind]='log' then totallog=totallog+b[file.size] /if
+   if b[file.kind]='pak' then totalpak=totalpak+b[file.size] /if
+   if b[file.kind]='db'  then totaldb=totaldb+b[file.size] /if
+   if onlyshow<>'' and onlyshow<>'ERROR' then
+    if b[file.kind]=onlyshow then
+     bigs2=appends(bigs2,b)
+    else
+     bigs3=appends(bigs3,b)
+    /if 
+   else
+    bigs2=appends(bigs2,b)
+   /if
+  /if
+ /for
+ bigs=bigs2
+ if bigs='' or bigs='ERROR' then
+  bigs=bigs3
+ /if
+ bigs2='ERROR'
+ bigs3='ERROR'
+ bigs=sortcol(bigs,file.user)
+ bigs=sortcoln(bigs,file.originalsize)
+ if sortby<>'' and sortby<>'ERROR' then
+  SWITCH sortby DO
+   CASE "size"  DO bigs=sortcoln(bigs,file.originalsize) /CASE
+   CASE "user"  DO bigs=sortcol(bigs,file.user)          /CASE
+   CASE "type"  DO bigs=sortcol(bigs,file.type)          /CASE
+   CASE "kind"  DO bigs=sortcol(bigs,file.kind)          /CASE
+   CASE "name"  DO bigs=sortcol(bigs,file.name)          /CASE
+  /SWITCH
+ /if
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite</title>
+  <<commonheader>>
+  <style>
+   .table {
+    table-layout:fixed;
+   }
+   .table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+   }
+  </style>
+  <script>
+   $(document).ready(function(){
+    $(".toggler").click(function(e){
+        e.preventDefault();
+        $('.cat'+$(this).attr('data-prod-cat')).toggle();
+    });
+   });
+  </script>
+ </head>
+ <body class="container">
+  <<showwith('<div class="alert alert-info alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>',message(0),'</div>')>>
+  <<nav()>>
+  <div class="row">
+   <div class="col-md-12">
+    <h1>Multisite for HTML/OS</h1>
+    <h2>HTML/OS large file management</h2>
+    <p>See what files are taking significant space.</p>
+    <h3>Total: <<size(total,'normal')>></h3>
+    <h3>TotalLog: <<size(totallog,'normal')>></h3>
+    <h3>TotalPak: <<size(totalpak,'normal')>></h3>
+    <h3>TotalDb: <<size(totaldb,'normal')>></h3>
+    <table class="table">
+     <thead>
+      <tr>
+       <th style="width:20%" colspan="2"><a href="<<page>>" name="sortby" value="size">Size Original/Current</a></td>
+       <th style="width:20%"><a href="<<page>>" name="sortby" value="user">User</a></td>
+       <th style="width:10%"><a href="<<page>>" name="sortby" value="type">Type</a></td>
+       <th style="width:10%"><a href="<<page>>" name="sortby" value="kind">Kind</a></td>
+       <th style="width:40%"><a href="<<page>>" name="sortby" value="name">Filename</a></td>
+      </tr>
+     </thead>
+     <tbody>
+  <<
+  c=1
+  for name=bigs rowname=x do
+
+   if x[file.kind]='log' then
+    deleteit=^<a href="deletefile" name="filepath" value="^+x[file.user]+'|'+x[file.group]+'|'+x[file.path]+^">Truncate&nbsp;^+logtail+^</a>^
+   else
+    deleteit=^^
+   /if
+   if onlyshow='ERROR' or onlyshow='' then
+    onlyshowvalue=x[file.kind]
+   else
+    onlyshowvalue=''
+   /if
+
+   agig=1024*1024*1024
+
+
+   if abs(x[file.originalsize]-x[file.size])<(agig/100) then
+    thesize=''
+   else
+    thesize=size(x[file.size],'short')
+   /if
+   display ^
+      <tr>
+       <td style="width:10%">^+size(x[file.originalsize],'short')+^</td>
+       <td style="width:10%">^+thesize+^</td>
+       <td style="width:20%">^+x[file.user]+^</td>
+       <td style="width:10%">^+x[file.type]+^</td>
+       <td style="width:10%"><a href="^+page+^" name="onlyshow" value="^+onlyshowvalue+^">^+x[file.kind]+^</a></td>
+       <td style="width:40%" title="^+attribprep(x[file.path])+^"><a href="#" class="toggler" data-prod-cat="^+c+^">^+x[file.name]+^</a></td>
+      </tr>
+      <tr>
+       <td colspan="2" class="cat^+c+^" style="display:none">^+deleteit+^</td>
+       <td colspan="4" class="cat^+c+^" style="display:none">^+x[file.path]+^</td>
+      </tr>^ /display 
+   c=c+1
+  /for
+  >>
+     </tbody>
+    </table>
+   </div>
+  </div>
+ </body>
+</html>
+<<overlay deletefile
+ filepath=split(filepath,'|')
+ temp=syscall('',SUDO+'bin/sh -c "/usr/bin/tail -n '+logtail+' '+filepath[1,3]+' > '+filepath[1,3]+'.000"')
+ mv(filepath[1,3]+'.000',filepath[1,3])
+ chown(filepath[1,3],filepath[1,1],filepath[1,2])
+
+ message('Truncated:'+filepath[1,3])
+ goto page
+>>

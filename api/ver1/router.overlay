@@ -1,0 +1,344 @@
+<<
+expand file="/apps/multisite/addsite.lib" /expand
+expand file="formats.lib" /expand
+
+
+temp=split(tag_[tag_length],'.')
+filetype=temp[1,2]
+tag_[tag_length]=temp[1,1]
+
+if filetype='' or filetype='ERROR' then filetype='json' /if
+
+o=2
+
+   #########
+   #
+   # .../api/servers/list
+   #
+  /#
+  if tag_[2+o]='servers' and tag_[3+o]='list' and tag_length=3+o then
+
+
+    # ----- SHOW THE SERVER LOAD AVERAGES. ----- /#
+    # TERRY'S RAW CODE EXAMPLE:  <pre><<syscall('W','usr/bin/w')>></pre> /#
+
+
+    tempQ = syscall('W','usr/bin/w')
+    tempQ = CHOPLEFT(tempQ,^load average: ^)
+    tempQ = CHOPRIGHT(tempQ,LF)
+    tempQ = REPLACE(tempQ,^load average: ^,^^)
+    server_load_averages = tempQ
+    tempQ = ""
+
+    temp=dir(SITEROOT,'')
+    temp1='ERROR'
+
+
+
+    for name=temp rowname=x do
+     if left(x[1],length(userprefix))=userprefix then
+      if isfile('/apps/mutlisite/api/rsync/'+x[1]+'.txt') then
+       copy file='/apps/multisite/api/rsync/'+x[1]+'.txt' to rsyncstatus /copy
+       if rsyncstatus='' or rsyncstatus='ERROR' then rsyncstatus='-empty-' /if
+
+       rsynctime='ERROR'
+       if isfile('/apps/api/rsync/'+x[1]+'.starttime.txt') then
+        copy file='/apps/api/rsync/'+x[1]+'.starttime.txt' to rsyncstart /copy
+        if left(rsyncstatus,10)='Completed:' then
+         rsynctime=timebetween(trim(rsyncstart),trim(replace(rsyncstatus,'Completed:','')),'minutes')
+        /if
+       /if
+
+
+      else
+       rsyncstatus=''
+      /if
+
+      y='ERROR' y[1]=x[1] y[2]=cat(SITEROOT+x[1]+'/script/htmlos.conf','') y[3]=rsyncstatus+showwith(' in ',rsynctime,' minutes.')
+      rsynctime='ERROR'
+      temp1=appends(temp1,y)
+     /if
+    /for
+
+x='ERROR'
+x[1]='user'
+x[2]='htmlos.conf'
+x[3]='rsync_status'
+
+
+thevars[1,1]='server_load_averages' thevars[2,1]=server_load_averages
+thevars[1,2]='usernum'              thevars[2,2]=usernum
+
+
+    webpush_table(thevars,x,temp1,filetype)
+
+  
+   #########
+   #
+   # .../api/server/example.com/view/htmlos.conf
+   # auth=...
+   #
+  /#
+
+
+  elif tag_[2+o]='server' and tag_[3+o]<>'ERROR' and tag_[3+o]<>'' and tag_[4+o]='view' and tag_[5+o]='htmlos.conf' and tag_length=5+o then
+
+   if left(tag_[3+o],4)='www.' then else tag_[3+o]='www.'+tag_[3+o] /if
+   y=cat('/http/'+tag_[3+o]+'/script/htmlos.conf','')
+   y=ci_deltexttovar(y,lf,' ')
+   webpush(TABLETOCSV(y),'text/plain')
+
+
+
+
+
+
+   #########
+   #
+   # .../api/server/example.com/htmlos.conf
+   # auth=...
+   # param=...
+   # value=...
+   #
+  /#
+  elif tag_[2+o]='server' and tag_[3+o]<>'ERROR' and tag_[3+o]<>'' and tag_[4+o]='htmlos.conf' and tag_length=4+o then
+
+   $(getvariables(sysstdin,'param=unpostprep(EXTERNAL_param) val=unpostprep(EXTERNAL_value)'))
+   if left(tag_[3+o],4)='www.' then else tag_[3+o]='www.'+tag_[3+o] /if
+   y=cat('/http/'+tag_[3+o]+'/script/htmlos.conf','')
+
+   y=ci_deltexttovar(y,lf,' ')
+   found='ERROR'
+   changed='ERROR'
+   for name=y rownum=x do
+    if y[1,x]='HTMLOSPrivate' then found='TRUE' /if
+    if y[1,x]=param and param<>'' and param<>'ERROR' then
+     if y[2,x]=val then
+      changed='FALSE'
+     else
+      changed='TRUE'
+      y[2,x]=val
+     /if
+    /if
+   /for
+   if found='TRUE' then
+    if changed='TRUE' then
+     text=''
+     for name=y rowname=x do
+      text=text+x[1]+' '+x[2]+lf
+     /for
+     copy text to file='/apps/api/htmlos_'+usernum+'.conf' /copy
+     sysfixprivate('/apps/api/htmlos_'+usernum+'.conf')
+     cp('/http/'+domainname+'/private/apps/api/htmlos_'+usernum+'.conf','/http/'+tag_[3+o]+'/script/htmlos.conf')
+     chown('/http/'+tag_[3+o]+'/script/htmlos.conf','lionslight','lionslight')
+     sysrm('/apps/api/htmlos_'+usernum+'.conf')
+     webpush('SUCCESS: htmlos.conf changed','text/plain')
+    else
+     webpush('ERROR: htmlos.conf no changes necessary','text/plain')
+    /if
+   else
+    webpush('ERROR: htmlos.conf not found','text/plain')
+   /if
+   webpush(TABLETOCSV(y),'text/plain')
+
+
+   webpush('ERROR: API Endpoint Found ('+tag+')'+y+'|'+param+'|'+val,'text/plain')
+
+
+
+
+
+
+
+
+
+
+   #########
+   #
+   # .../api/server/example.com/create
+   #
+  /#
+  elif tag_[2+o]='server' and tag_[3+o]<>'ERROR' and tag_[3+o]<>'' and tag_[4+o]='create' and tag_length=4+o then
+
+
+
+
+    temp=dir('/http','')
+    temp1='ERROR'
+    for name=temp rowname=x do
+     if x[1]=tag_[3+o] then
+      webpush('ERROR: Domain Already Exists','text/plain')
+     /if
+    /for
+
+
+    asetupversion='ERROR' sitepassword='ERROR'
+    $(getvariables(sysstdin,'asetupversion=unpostprep(EXTERNAL_version) sitepassword=unpostprep(EXTERNAL_password)'))
+    if asetupversion='' or asetupversion='ERROR' or not(isinteger(asetupversion)) then
+     webpush('ERROR: Missing/Malformed Version','text/plain')
+    /if
+    if sitepassword='' or sitepassword='ERROR' or length(sitepassword)<8 then
+     webpush('ERROR: Missing Password or less than 8 characters','text/plain')
+    /if
+
+    if left(tag_[3+o],4)='www.' then else tag_[3+o]='www.'+tag_[3+o] /if
+
+
+
+
+
+    y=DLLaddsite.lib(tag_[3+o],asetupversion,sitepassword,'')
+    b=y[1,1]+': '+y[2,1]+' '+y[3,1]
+    temp=webpush(b,'text/plain')
+
+
+
+
+
+
+
+
+
+
+
+   #########
+   #
+   # .../api/server/example.com/rename
+   #
+  /#
+  elif tag_[2+o]='server' and tag_[3+o]<>'ERROR' and tag_[3+o]<>'' and tag_[4+o]='rename' and tag_length=4+o then
+
+    newname='ERROR'
+    $(getvariables(sysstdin,'newname=unpostprep(EXTERNAL_newname)'))
+    if newname='' or newname='ERROR' then
+     webpush('ERROR: Missing/Malformed New Name','text/plain')
+    /if
+
+    if left(tag_[3+o],4)='www.' then else tag_[3+o]='www.'+tag_[3+o] /if
+    if left(newname,4)='www.' then else newname='www.'+newname /if
+
+    temp=dir('/http','')
+    found='ERROR'
+    found1='ERROR'
+    for name=temp rowname=x do
+     if x[1]=tag_[3+o] then found ='TRUE' /if
+     if x[1]=newname then found1='TRUE' /if
+    /for
+    if found='ERROR' then
+     webpush('ERROR: Unknown Domain, Rename Failed','text/plain')
+    /if
+    if found1='TRUE' then
+     webpush('ERROR: Destination name exists, Rename Failed','text/plain')
+    /if
+
+    y=mv('/http/'+tag_[3+o],'/http/'+newname)
+    y=DLLaddsite.lib(newname,471,'','TRUE')
+    if y[1,1]<>'ERROR' then y[3,1]='Domain renamed' /if
+    b=y[1,1]+': '+y[2,1]+' '+y[3,1]
+    temp=webpush(b,'text/plain')
+
+
+
+
+
+
+
+
+
+
+
+   #########
+   #
+   # .../api/server/example.com/rsync
+   #
+  /#
+  elif tag_[2+o]='server' and tag_[3+o]<>'ERROR' and tag_[3+o]<>'' and tag_[4+o]='rsync' and tag_length=4+o then
+
+
+    $(getvariables(sysstdin,'oldhome=unpostprep(EXTERNAL_oldhome)'))
+
+    if oldhome='' or oldhome='ERROR' then
+     webpush('ERROR: Missing/Malformed Home Directory'+sysstdin,'text/plain')
+    /if
+
+    if left(tag_[3+o],4)='www.' then else tag_[3+o]='www.'+tag_[3+o] /if
+
+    if isfile('/apps/api/rsync/'+tag_[3+o]+'.txt') then
+     copy file='/apps/api/rsync/'+tag_[3+o]+'.txt' to status /copy
+     if left(status,10)='Completed:' then
+      status='free'
+     else
+      status='locked'
+     /if
+    else
+     status='free'
+    /if
+
+    if status='free' then
+     temp=^oldhome='^+oldhome+^'^+lf+
+          ^newhome='^+tag_[3+o]+^'^+lf+lf+
+
+          ^copy 'Starting public' to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+          ^A=syscall('public' ,'usr/bin/rsync -aeP --delete --rsh=ssh --exclude-from=/ignore.txt root@lionslight.com:/home/'+oldhome+'/public_html/ /http/'+newhome+'/public')^+lf+lf+
+
+          ^copy 'Starting private' to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+          ^B=syscall('private','usr/bin/rsync -aeP --delete --rsh=ssh --exclude-from=/ignore.txt root@lionslight.com:/home/'+oldhome+'/public_html/cgi-bin/private/ /http/'+newhome+'/private')^+lf+lf+
+
+          ^copy 'Setting ownership' to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+          ^C=syscall('chown'  ,'bin/chown -R lionslight:lionslight /http/'+newhome+'/')^+lf+
+          ^D=syscall('remove' ,'bin/rm /http/'+newhome+'/private/apps/imageservices/prefs.csv')^+lf+lf+
+
+          ^copy 'Completed: '+nows() to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+
+          ^message='Public:'+A+lf+'Private:'+B+lf+'chown:'+C+lf+'remove:'+D^+lf
+
+     copy temp to file='/apps/api/rsync/'+tag_[3+o]+'.scheduler' /copy
+
+     copy 'Job Submitted' to file='/apps/api/rsync/'+tag_[3+o]+'.txt' /copy
+     copy nows() to file='/apps/api/rsync/'+tag_[3+o]+'.starttime.txt' /copy
+
+     submitjob('/apps/api/rsync/'+tag_[3+o]+'.scheduler')
+
+     b='Job Submitted:'+oldhome+' ==> '+tag_[3+o]
+    else
+     b='Job Already Submitted:'+oldhome+' ==> '+tag_[3+o]
+    /if
+    temp=webpush(b,'text/plain')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   #########
+   #
+   # /api/... UNKNOWN ENDPOINT
+   #
+  /#
+  else
+   webpush('ERROR: API Endpoint Not Found ('+tag+')','text/plain')
+  /if
+
+
+
+
+
+
+
+>>

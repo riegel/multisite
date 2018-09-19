@@ -1,0 +1,32 @@
+PublicURLPrefix /
+MailProgram /usr/sbin/sendmail
+PortNum 
+HTMLOSExtension {SCRIPTEXT}
+DocumentPath {BASE}/public
+HTMLOSPrivate {BASE}/private
+HTMLOSCache {BASE}/cache
+ScriptPrefix 
+BackLimit unlimited
+ServiceType {SERVICETYPE}
+DomainName {DOMAIN}
+UseRelativePath Y
+AddWWW N
+ProductType C
+HTMLOSInstallDir {BASE}/{SCRIPT}/
+CgiWrapCpuLim 0
+CgiWrapVmemLim 0
+CgiWrapDataLim 0
+CgiWrapStackLim 0
+CacheDirectories 1
+Timeout 100
+DBLockType PROCESS
+AllowVBExpand Y
+AllowLinks Y
+AllowHTML Y
+MemberName {USER}
+CookieId Off
+CookieSecurity Off
+SystemExtensionType Y
+ENCHost
+CacheDirectories 1
+SystemDirectory /

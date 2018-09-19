@@ -1,0 +1,156 @@
+function router(path) do
+ return getlink('/apps/multisite/index.overlay','router',path) /return
+/function
+ 
+
+
+function HTML_authorize_variables(vars) locals text,x do
+ vars=split(vars,' ')
+ text=^   <script>
+    document.addEventListener("DOMContentLoaded", function(event) { 
+     document.getElementById("authorizedvariables").innerHTML='';
+    });
+   </script>
+   <span id="authorizedvariables">^
+ for name=vars rowname=x do
+  text=text+^    <input type="hidden" name="^+x[1]+^">^+lf
+ /for
+ text=text+^   </span>^
+ return text /return
+/function
+
+
+if MULTISITE_KEY='' or MULTISITE_KEY='ERROR' then
+ if isfile('/apps/multisite/key.txt') then
+  copy file='/apps/multisite/key.txt' to MULTISITE_KEY /copy
+ else
+  temp=encrypt(random(1000,9999)+'x'+random(1000,9999),random(1000,9999))
+  copy temp to file='/apps/multisite/key.txt' /copy
+  MULTISITE_KEY=temp
+ /if
+/if
+
+
+
+
+expand file='/apps/appmanager/bootstrap/local.lib' /expand
+expand file='/apps/appmanager/appmanager.lib' /expand
+expand file='/apps/multisite/addsite.lib' /expand
+
+keymanager='ERROR'
+if keymanager='ERROR' then
+ if isfile("/apps/api/keymanager/index.html") then 
+  expand file="/apps/api/keymanager/rsa_keys.lib" /expand 
+  keymanager='TRUE'
+ else
+  keymanager='FALSE'
+ /if
+/if
+
+
+if isfile('/apps/route/image_generator.lib') then
+ expand file='/apps/route/image_generator.lib' /expand
+ a='qw'+hash(fileinfo('/apps/files/favicon.png'))
+ temp=^  <link rel="icon" type="image/x-icon" href="^+syspublicurl+src('/apps/multisite/favicon.png',128,128,'ICON')+^" />^+lf+
+      ^  <link rel="apple-touch-icon" href="^+syspublicurl+src('/apps/multisite/favicon.png',150,150,'CROP-PRESERVEFORMAT')+^" />^+lf+
+      ^  <meta property="og:image" content="^+syspublicurl+src('/apps/multisite/favicon.png',256,256,'CROP-PRESERVEFORMAT')+^" />^+lf
+else
+ temp=''
+/if
+
+
+commonheader=showwith('',bootstrap_header,lf)+lf+
+             ^  <link rel="stylesheet" type="text/css" href="/apps/multisite/styles.css?v=2">^+lf+
+             ^  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">^+lf+
+                temp+
+             ^  <style>body {margin-top:2em;}</style>^
+
+function nav() locals link,links,text,temp,x,here,appid,cog do
+
+
+
+
+
+
+ link='<a href="'+router('/desktop')+'">Desktop</a>'
+ links='ERROR'
+ links[1,1]=router('/preferences')                                    links[2,1]='Preferences'
+
+
+ if isdirty('/apps/multisite','virtualhosts') then cog=' <i class="fa fa-cog fa-spin"></i>' else cog='' /if
+
+ if isdirty('/apps/multisite','virtualhostsapache')='TRUE' then
+  links[1,2]=router('/restart')                                       links[2,2]='<span style="color:red">restart apache'+showwith(' ',cog,'')+'</span>'
+
+  a=ci_parsehref('href="/apps/multisite/diffcheck.html" popup="900,900"') a=middle(a,7,length(a)-2)
+  links[1,3]=a links[2,3]='diff'
+
+ /if
+
+
+
+
+
+ text=''
+ if router='' or router='ERROR' or router_[1]='' then
+  text=''
+ else
+  text=text+'  <ol class="breadcrumb">'+lf
+  here='/'
+  text=text+'   <li><a href="'+router(here)+'"><span class="glyphicon glyphicon-home"></span></a></li>'+lf
+  for name=x value=1 to router_length do
+
+   if left(router_[x],length(USERPREFIX))=USERPREFIX then r_x=replace(router_[x],USERPREFIX,'') else r_x=router_[x] /if
+
+   here=here+router_[x]
+   text=text+'   <li><a href="'+router(here)+'">'+proper(r_x)+'</a></li>'+lf
+   here=here+'/'
+  /for
+  text=text+'  </ol>'
+ /if
+ return bootstrap_nav_plus('Multisite',router('/'),link,links)+text /return
+/function
+
+
+
+
+
+
+
+function q(text) do
+ return replaceall(text,'"',^"+'"'+"^) /return
+/function
+
+
+
+
+
+
+
+
+
+
+if isfile('/apps/api/oauth1/config.lib') then else
+ copy
+      '  oauth_connect_echo="/bin/echo"'+lf+
+      '  oauth_connect_openssl="/usr/bin/openssl"'+lf to file='/apps/api/oauth1/config.lib'
+ /copy
+/if
+
+copy file="/apps/multisite/template/virtualhosts.txt" to temp1 /copy
+copy file="/apps/multisite/template/virtualhosts_cache.txt" to temp2 /copy
+copy file="/apps/multisite/template/virtualhosts_default.txt" to temp3 /copy
+copy file="/apps/multisite/template/virtualhosts_default_cache.txt" to temp4 /copy
+if temp1=temp2 and temp3=temp4 then
+ make_clean('/apps/multisite','virtualhoststemplates')
+else
+ make_dirty('/apps/multisite','virtualhosts')
+ make_dirty('/apps/multisite','virtualhoststemplates')
+ make_dirty('/apps/multisite','virtualhostsapache')
+ users=multisite_users()
+ for name=users rowname=x do
+  make_dirty('/apps/multisite',i[n_USER])
+ /for
+/if
+
+

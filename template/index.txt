@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Home</title>
+  <style>
+   body       {background-color: #eeeeee;font:14px/20px 'Helvetica', Arial, sans-serif;}
+   img        {padding: 18px 15px 200px 10px;}
+   .container {background-color:#ffffff; margin: 50px; -moz-border-radius:6px;border-radius:6px;-webkit-border-radius:6px; padding: 5px 10px 10px 10px;}
+  </style>
+ </head>
+ <body>
+  <div class="container">
+   <h1>Welcome</h1>
+   <p>Your Server has been setup.</p>
+   <address>HTML/OS Server</a></address>
+  </div>
+ </body>
+</html>

@@ -1,0 +1,67 @@
+<<
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite- Apache Restart</title>
+  <meta http-equiv="refresh" content="100;url=<<returnpage>>" />
+  <<commonheader>>
+  <script src="/apps/clear/clear.js"></script>
+  <script>
+    $(function(){
+     var timerId, percent;
+     // reset progress bar
+     percent = 0;
+     $('#load').css('width', '0px');
+     $('#load').addClass('progress-bar-striped active');
+
+     timerId = setInterval(function() {
+       // increment progress bar
+       percent += 1;
+       $('#load').css('width', percent + '%');
+       $('#load').html(percent + '%');
+       // complete
+       if (percent >= 100) {
+         clearInterval(timerId);
+         $('#load').removeClass('progress-bar-striped active');
+         $('#load').html('Reloading');
+       }
+     },150);
+
+    });
+  </script>
+ </head>
+ <body class="container">
+  <div class="row">
+   <div class="col-md-12">
+    <h2>Applying Configuration</h2>
+    <div class="progress">
+     <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="load" style="width:10%">
+      0%
+     </div>
+    </div>
+    <div id="message"><pre>Pre Flight: Checking Virtual Hosts</pre></div>
+   </div>
+  </div>
+  <script>
+   CLEAR.f.runOverlay('<<getlink1('restart')>>')
+  </script>
+ </body>
+</html>
+<<overlay restart
+ rebuild_virtual_hosts()
+ temp=load_restart_apache()
+ if returnpage='ERROR' then
+  returnpage=getlink('index.html')
+  writehtml('message','<pre>'+temp+'</pre>')
+  temp=^setTimeout(function(){document.location.href='^+returnpage+^';},3000);^
+ else
+  writehtml('message','<pre>'+temp+'</pre>')
+  temp=^setTimeout(function(){document.location.href='^+returnpage+^';},1000);^
+ /if
+ runscript(temp)
+ endoverlay()
+>>

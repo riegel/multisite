@@ -1,0 +1,1 @@
+Multisite is an HTML/OS app that controls all the sites on your server. With Multisite you can get rid of cpanel and other server management solutions.

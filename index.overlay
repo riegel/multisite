@@ -1,0 +1,65 @@
+<<
+
+
+ # Router for Multisite
+ #
+ # /users
+ # /users/userid
+ # /users/userid/domain
+ # 
+/#
+
+
+
+ if router='' or router='ERROR' then router='/' /if
+
+
+
+ router_='ERROR'
+ setTagVars('router')
+
+ if router_length=1 then
+  if router_[1]='' then
+   goto 'index.html'
+  elif router_[1]='site' then
+   sites_site='ERROR'
+   goto 'users-list.html'
+  elif router_[1]='system-tests' then
+   ID_finished='ERROR'
+   goto 'testmultisite.html'
+  elif router_[1]='update' then
+   goto 'update.html'
+  elif router_[1]='config' then
+   goto 'config.html'
+  elif router_[1]='api' then
+   goto 'apiaccess.html'
+  elif router_[1]='preferences' then
+   goto 'preferences-index.html'
+  elif router_[1]='logs' then
+   goto 'logmanager.html'
+  elif router_[1]='rsync' then
+   goto 'rsync.html'
+  elif router_[1]='rsync-test' then
+   goto 'rsync-test.html'
+  elif router_[1]='templates' then
+   goto 'templates.html'
+  elif router_[1]='keymanager' then
+   goto '/apps/api/keymanager/index.html'
+  elif router_[1]='desktop' then
+   goto iconpage
+  elif router_[1]='rsync-test' then
+   goto 'rsync-test.html'
+  elif router_[1]='restart' then
+   goto 'restart.html'
+  elif left(router_[1],length(USERPREFIX))=USERPREFIX then
+   sites_site=router_[1]
+   goto 'users-view.html'
+  /if
+ elif router_length=2 then
+  if router_[1]='preferences' and router_[2]='settings' then
+   goto 'preferences.html'
+  /if
+ /if
+
+ goto error('404|'+router+router_length)
+>>

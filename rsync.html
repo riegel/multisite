@@ -1,0 +1,365 @@
+<<
+ entity_var='ERROR'
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ expand file="addsite.lib" /expand
+ if sites_site='ERROR' or sites_site='' then goto 'index.html' /if
+
+
+ 
+
+ OLD_PATH_TO_PUBLIC  = getval('/apps/multisite/defaults.txt',sites_site+'_old_path_to_public' ,'')
+ OLD_PATH_TO_PRIVATE = getval('/apps/multisite/defaults.txt',sites_site+'_old_path_to_private','')
+ RSYNC_OPTIONS       = getval('/apps/multisite/defaults.txt',sites_site+'_rsync_options'      ,'')
+ EXCLUDELIST         = getval('/apps/multisite/defaults.txt',sites_site+'_excludelist'        ,'')
+
+
+
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite Rsync</title>
+  <<commonheader>>
+  <script>
+
+function showwith(a,b,c) {
+ if(b){return a+b+c;} else {return '';}
+}
+
+    $(function(){
+
+     $(document).keyup(function(){
+
+
+var excludelist = $('#EXCLUDELIST').val().split("\n");
+var exclude='';
+for( var i = 0; i < excludelist.length; ++i ) {
+ if(excludelist[i] !== ''){
+  exclude=exclude+'--exclude='+excludelist[i]+' ';
+ }
+}
+
+ var rsyncpublic='rsync -aveP --rsh='+"'"+'ssh'+showwith(" -p",$('#REMOTE_PORT').val(),"")+"' "+showwith('',$('option:selected', '#RSYNC_OPTIONS').val(),' ')+exclude+$('#OLD_SERVER').val()+':'+$('#OLD_PATH_TO_PUBLIC').val()+' <<SITEROOT>><<SITES_SITE>>/public/'
+
+ $('#publiccommand').html(rsyncpublic);
+
+ var rsyncprivate='rsync -aveP --rsh='+"'"+'ssh'+showwith(" -p",$('#REMOTE_PORT').val(),"")+"' "+showwith('',$('option:selected', '#RSYNC_OPTIONS').val(),' ')+exclude+$('#OLD_SERVER').val()+':'+$('#OLD_PATH_TO_PRIVATE').val()+' <<SITEROOT>><<SITES_SITE>>/private/'
+
+ $('#privatecommand').html(rsyncprivate);
+
+     });
+     $(document).keyup();
+     $('#RSYNC_OPTIONS').change(function(){$(document).keyup();})
+    });
+  </script>
+ </head>
+ <body class="container">
+
+
+  <<showwith('<div class="alert alert-' + message_code(0) + '" role="alert">',message(0),'</div>')>>
+
+  <<nav()>>
+  <form action="rsync" method="post">
+  <div class="row">
+   <div class="col-md-12">
+    <h1>rsync <<sites_site>></h1>
+   </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="OLD_SERVER">User@OldServer <small><a href="<<router('/rsync-test')>>">change</a></small></label>
+     <input type="text" name="OLD_SERVER" id="OLD_SERVER" class="form-control" placeholder="i.e. root@oldexample.com" disabled>
+    </div>
+   </div>
+  </div>
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="REMOTE_PORT">remote port <small><a href="<<router('/rsync-test')>>">change</a></small></label>
+     <input type="text" name="REMOTE_PORT" id="REMOTE_PORT" class="form-control" placeholder="i.e. 22 (leave blank for default 22)" disabled>
+    </div>
+   </div>
+  </div>
+
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="OLD_PATH_TO_PUBLIC">Path to public on old server</label>
+     <input type="text" name="OLD_PATH_TO_PUBLIC" id="OLD_PATH_TO_PUBLIC" class="form-control" placeholder="i.e. /home/exampleuser/html_public/">
+    </div>
+   </div>
+  </div>
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="OLD_PATH_TO_PRIVATE">Path to private on old server</label>
+     <input type="text" name="OLD_PATH_TO_PRIVATE" id="OLD_PATH_TO_PRIVATE" class="form-control" placeholder="i.e. /home/exampleuser/html_public/cgi-bin/private/">
+    </div>
+   </div>
+  </div>
+
+
+
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="RSYNC_OPTIONS">Delete Files on this Server</label>
+     <select name="RSYNC_OPTIONS" id="RSYNC_OPTIONS" class="form-control">
+      <option value="">Keep Files found only on this server</option>
+      <option value="--delete">Make this server mirror the old one by removing files on this server that are not on the old server.</option>
+     </select>
+    </div>
+   </div>
+  </div>
+
+
+
+
+
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="EXCLUDELIST">Exclude List</label>
+     <textarea name="EXCLUDELIST" id="EXCLUDELIST" wrap="off" class="form-control" placeholder="i.e.&#10;*.log&#10;.TEMP/*&#10;*/cgi-bin/*&#10;cache/*&#10;*/private/*" style="font-family:courier;font-size:8pt;height:160px;"></textarea>
+    </div>
+   </div>
+  </div>
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="btn-group">
+     <button type="submit" name="mybutton" value="save" class="btn btn-primary">Save</button>
+     <a data-toggle="modal" data-target="#ViewRsyncCode" class="btn btn-default">Show rsync commands</a>
+     <!-- <button type="submit" name="mybutton" value="run" class="btn btn-default">Execute rsync commands</button> -->
+    </div>
+   </div>
+  </div>
+  </form>
+
+
+
+
+
+
+
+       <!-- Modal -->
+       <div class="modal fade" id="ViewRsyncCode" tabindex="-1" role="dialog" aria-labelledby="ViewRsyncCodeLabel">
+        <div class="modal-dialog" role="document">
+         <div class="modal-content">
+          <div class="modal-header">
+           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <div class="modal-body">
+           <h4 class="modal-title" id="myModalLabel">commands for...</h4>
+           <h5>Public files</h5>
+           <pre><code id="publiccommand"></code></pre>
+           <h5>Private files</h5>
+           <pre><code id="privatecommand"></code></pre>
+          </div>
+          <div class="modal-footer">
+           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+         </div>
+        </div>
+       </div>
+
+ </body>
+</html>
+
+<<overlay rsync
+
+
+ putval('/apps/multisite/defaults.txt',sites_site+'_old_path_to_public' ,OLD_PATH_TO_PUBLIC )
+ putval('/apps/multisite/defaults.txt',sites_site+'_old_path_to_private',OLD_PATH_TO_PRIVATE)
+
+ putval('/apps/multisite/defaults.txt',sites_site+'_rsync_options'      ,RSYNC_OPTIONS      )
+ putval('/apps/multisite/defaults.txt',sites_site+'_excludelist'        ,EXCLUDELIST        )
+
+
+goto page
+
+ save_excludelist=excludelist
+
+ excludelist=split(excludelist,lf)
+ exclude=''
+ for name=excludelist rowname=x do
+  if x[1]<>'' and x[1]<>'ERROR' then
+   exclude=exclude+' --exclude='+x[1]
+  /if
+ /for
+
+ sysmd('/apps/multisite/rsync/')
+ statusfile='/apps/multisite/rsync/'+sites_site
+
+
+  rsyncpublic="rsync -aveP --rsh='ssh"+showwith(" -p",REMOTE_PORT,"")+"' "+RSYNC_OPTIONS+" "+exclude+" "+OLD_SERVER+":"+OLD_PATH_TO_PUBLIC+" "+SITEROOT+SITES_SITE+"/public/ >> "+SITEROOT+SITES_SITE+"/logs/rsyncPUBLIC.log 2>&1"
+ rsyncprivate="rsync -aveP --rsh='ssh"+showwith(" -p",REMOTE_PORT,"")+"' "+RSYNC_OPTIONS+" "+exclude+" "+OLD_SERVER+":"+OLD_PATH_TO_PRIVATE+" "+SITEROOT+SITES_SITE+"/private/ >> "+SITEROOT+SITES_SITE+"/logs/rsyncPRIVATE.log 2>&1"
+
+
+ if isfile(statusfile+'.txt') then
+  copy file=statusfile+'.txt' to status /copy
+  if left(status,10)='Completed:' then
+   status='free'
+  else
+   status='locked'
+  /if
+ else
+  status='free'
+ /if
+
+ if status='free' then
+  scheduled_script=^expand file="/system/clearimage/DLL.lib" /expand^+lf+
+                   ^expand file="/apps/multisite/addsite.lib" /expand^+lf+
+
+                   ^x_progress='Starting public' copy x_progress to file='^+statusfile+^.txt' /copy progress(x_progress)^+lf+
+
+                   ^sleep(10000) A=syscall(" public rsync" ,^+'^'+^;/usr/bin/sudo -u ^+sites_site+^ sh -c "^+rsyncpublic+^"^+'^'+^)^+lf+lf+
+
+                   ^x_progress='Starting private' copy x_progress to file='^+statusfile+^.txt' /copy progress(x_progress)^+lf+
+
+                   ^sleep(10000) B=syscall("private rsync" ,^+'^'+^;/usr/bin/sudo -u ^+sites_site+^ sh -c "^+rsyncprivate+^"^+'^'+^)^+lf+lf+
+
+                   ^x_progress='Set Ownership and Permissions' copy x_progress to file='^+statusfile+^.txt' /copy progress(x_progress)^+lf+
+
+                   ^C=addskeleton.lib('^+sites_site+^')^+lf+
+                   ^if C='' then C=x_progress+' Complete' /if^+lf+
+
+                   ^x_progress='Completed: '+nows() copy x_progress to file='^+statusfile+^.txt' /copy progress(x_progress)^+lf+
+
+                   ^message='Public:'+A+lf+'Private:'+B+lf+'own/permissions:'+C^+lf
+
+  copy scheduled_script to file=statusfile+'.scheduler' /copy
+  copy 'Job Submitted' to file=statusfile+'.txt' /copy
+  copy nows() to file=statusfile+'.starttime.txt' /copy
+  submitjob(statusfile+'.scheduler')
+  b='Job Submitted: '+statusfile
+ else
+  b='Job Already Submitted: '+statusfile
+ /if
+
+
+
+
+
+
+
+message_code('success')
+message(b)
+
+excludelist=save_excludelist
+goto page
+>>
+
+
+
+
+
+
+
+
+
+
+
+
+ # 
+ # expand file="/apps/multisite/addsite.lib" /expand
+ # 
+ # oldhome='destiny'
+ # newhome='women'
+ # 
+ # temp=
+ # '/usr/bin/rsync -aeP --exclude cgi-bin /http/atjeu/home/'+OLDHOME+'/public_html/womenoftheworld.org/ '+SITEROOT+'user_'+NEWHOME+'/public'+lf+
+ # '/usr/bin/rsync -aeP --exclude cgi-bin /http/atjeu/home/'+OLDHOME+'/public_html/womenoftheworld.org/cgi-bin/private/ '+SITEROOT+'user_'+NEWHOME+'/private'+lf+
+ # '/bin/chown -R user_'+NEWHOME+':user_'+NEWHOME+' '+SITEROOT+'user_'+NEWHOME+'/private'+lf+
+ # '/bin/chown -R user_'+NEWHOME+':user_'+NEWHOME+' '+SITEROOT+'user_'+NEWHOME+'/public'+lf+
+ # '/bin/chmod 755 '+SITEROOT+'user_'+NEWHOME+'/private'+lf+
+ # '/bin/chmod 755 '+SITEROOT+'user_'+NEWHOME+'/public'+lf+
+ # '/bin/rm '+SITEROOT+'/user_'+NEWHOME+'/private/apps/imageservices/prefs.csv'+lf+
+ # 'cp '+SITEROOT+'/user_'+NEWHOME+'/public/.htaccess '+SITEROOT+'/user_'+NEWHOME+'/public/htaccess.txt'+lf+
+ # 'cp '+SITEROOT+'/user_'+NEWHOME+'/public/index.html '+SITEROOT+'/user_'+NEWHOME+'/public/OLDindex.html'+lf+
+ # 'rm '+SITEROOT+'/user_'+NEWHOME+'/public/index.html'+lf+
+ # 'cp '+SITEROOT+'/user_yogatech/script/php.cgi '+SITEROOT+'/user_'+NEWHOME+'/script/'+lf+
+ # '/bin/chown -R user_'+NEWHOME+':user_'+NEWHOME+' '+SITEROOT+'user_'+NEWHOME+'/script/php.cgi'+lf+
+ # ''+lf+
+ # 'nano '+SITEROOT+'/user_'+NEWHOME+'/public/.htaccess'+lf+
+ # ''
+ # 
+ # 
+ # display temp /display
+ # 
+ # 
+ # OLD_SERVER_AND_PATH_TO_PUBLIC
+ # OLD_SERVER_AND_PATH_TO_PRIVATE
+ # EXCLUDELIST
+ # USERNAME
+ # 
+ # syscall('rsync PUBLIC')
+ # 
+ # 
+ # 
+ # public='rsync -aeP --rsh='ssh -p2222' rbarnett@docpay.com:/home1/rbarnett/public_html/docpay.com/ /http/users/user_docpay/public/'
+ # private='rsync -aeP --rsh='ssh -p2222' rbarnett@docpay.com:/home1/rbarnett/public_html/docpay.com/ /http/users/user_docpay/public/'
+ # 
+ # 
+ # 
+ #     if isfile('/apps/api/rsync/'+tag_[3+o]+'.txt') then
+ #      copy file='/apps/api/rsync/'+tag_[3+o]+'.txt' to status /copy
+ #      if left(status,10)='Completed:' then
+ #       status='free'
+ #      else
+ #       status='locked'
+ #      /if
+ #     else
+ #      status='free'
+ #     /if
+ # 
+ #     if status='free' then
+ #      temp=^oldhome='^+oldhome+^'^+lf+
+ #           ^newhome='^+tag_[3+o]+^'^+lf+lf+
+ # 
+ #           ^copy 'Starting public' to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+ #           ^A=syscall('public' ,'usr/bin/rsync -aeP --delete --rsh=ssh --exclude-from=/ignore.txt root@lionslight.com:/home/'+oldhome+'/public_html/ /http/'+newhome+'/public')^+lf+lf+
+ # 
+ #           ^copy 'Starting private' to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+ #           ^B=syscall('private','usr/bin/rsync -aeP --delete --rsh=ssh --exclude-from=/ignore.txt root@lionslight.com:/home/'+oldhome+'/public_html/cgi-bin/private/ /http/'+newhome+'/private')^+lf+lf+
+ # 
+ #           ^copy 'Setting ownership' to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+ #           ^C=syscall('chown'  ,'bin/chown -R lionslight:lionslight /http/'+newhome+'/')^+lf+
+ #           ^D=syscall('remove' ,'bin/rm /http/'+newhome+'/private/apps/imageservices/prefs.csv')^+lf+lf+
+ # 
+ #           ^copy 'Completed: '+nows() to file='/apps/api/rsync/'+newhome+'.txt' /copy^+lf+
+ # 
+ #           ^message='Public:'+A+lf+'Private:'+B+lf+'chown:'+C+lf+'remove:'+D^+lf
+ # 
+ #      copy temp to file='/apps/api/rsync/'+tag_[3+o]+'.scheduler' /copy
+ # 
+ #      copy 'Job Submitted' to file='/apps/api/rsync/'+tag_[3+o]+'.txt' /copy
+ #      copy nows() to file='/apps/api/rsync/'+tag_[3+o]+'.starttime.txt' /copy
+ # 
+ #      submitjob('/apps/api/rsync/'+tag_[3+o]+'.scheduler')
+ # 
+ #      b='Job Submitted:'+oldhome+' ==> '+tag_[3+o]
+ #     else
+ #      b='Job Already Submitted:'+oldhome+' ==> '+tag_[3+o]
+ #     /if
+ # 
+ # 
+/#

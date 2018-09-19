@@ -1,0 +1,1037 @@
+ expand file="/apps/template/template.lib" /expand
+ expand file="/apps/multisite/sandbox.lib" /expand
+
+
+ # Blocks DLL's contain a function that matches its filename
+
+
+   addsite.lib(params...)
+
+   The function begins with DLL so that it can be loaded and called dynamically
+   generally there is only one function per Blocks DLL's
+
+   Blocks DLL's will always return "TRUE Description". or "ERROR:NUMBER:Reason"
+
+   Blocks DLL's are intended to DO something.
+
+ /#
+
+
+   ##### ENVIRONMENT VARS ###/#
+
+
+   if not(isfile('/apps/multisite/index.txt')) then syscp('/apps/multisite/indexDEFAULT.txt','/apps/multisite/index.txt') /if
+
+
+if domainname=wrapperdomains[1] then
+ # wrapper branch /#
+   if getenv('HTTPS')='ERROR' then temp='http://' else temp='https://' /if
+   MASTERDOMAIN=temp+domainname
+   ACCESSDOMAIN=domainname
+    DEFAULTUSER='ERROR'
+       SITEROOT=reverse(replace(reverse(htmlos.conf.DocumentPath),reverse('public'),''))
+     USERPREFIX='user_'
+     VHOSTSFILE='ERROR'
+       SUDOUSER='ERROR'
+           SUDO=''
+         ASETUP=getval('/apps/multisite/defaults.txt','asetup'      ,'manual'                       )
+      ASETUPVER=getval('/apps/multisite/defaults.txt','asetupver'   ,'NONE'                         )
+      APISECRET='ERROR'
+      APIMETHOD='ERROR'
+         USEWWW=getval('/apps/multisite/defaults.txt','usewww'      ,'naked'                        )
+     DEFAULTTLD='ERROR'
+      SCRIPTEXT=htmlos.conf.HTMLOSExtension
+        LOGTAIL=getval('/apps/multisite/defaults.txt','logtail'     ,'10000'                        )
+else
+ # root branch /#
+   if getenv('HTTPS')='ERROR' then temp='http://' else temp='https://' /if
+   MASTERDOMAIN=temp+domainname
+   ACCESSDOMAIN=getval('/apps/multisite/defaults.txt','accessdomain',domainname                     )
+    DEFAULTUSER=getval('/apps/multisite/defaults.txt','defaultuser' ,'default'                      )
+       SITEROOT=getval('/apps/multisite/defaults.txt','siteroot'    ,'/http/users/'                 )
+     USERPREFIX=getval('/apps/multisite/defaults.txt','userprefix'  ,'user_'                        )
+     VHOSTSFILE=getval('/apps/multisite/defaults.txt','vhostsfile'  ,'/http/virtual_host_list.conf' )
+       SUDOUSER=getval('/apps/multisite/defaults.txt','sudouser'    ,'ec2-user'                     )
+           SUDO=getval('/apps/multisite/defaults.txt','sudo'        ,'usr/bin/sudo /'               )
+         ASETUP=getval('/apps/multisite/defaults.txt','asetup'      ,'manual'                       )
+      ASETUPVER=getval('/apps/multisite/defaults.txt','asetupver'   ,'NONE'                         )
+      APISECRET=getval('/apps/multisite/defaults.txt','apisecret'   ,'NONE'                         )
+      APIMETHOD=getval('/apps/multisite/defaults.txt','apimethod'   ,'RSA-SHA1'                     )
+         USEWWW=getval('/apps/multisite/defaults.txt','usewww'      ,'naked'                        )
+     DEFAULTTLD=getval('/apps/multisite/defaults.txt','defaulttld'  ,'com'                          )
+      SCRIPTEXT=getval('/apps/multisite/defaults.txt','scriptext'   ,'cgi'                          )
+        LOGTAIL=getval('/apps/multisite/defaults.txt','logtail'     ,'10000'                        )
+
+   if APISECRET='NONE' then
+      APISECRET=getval('/apps/multisite/defaults.txt','apisecret'   ,encrypt(random(1000,9999)+'x'+random(1000,9999),random(1000,9999))  )
+
+/if
+
+
+
+    if ASETUPVER='NONE' then
+     vers='ERROR'
+     temp=sysls('/system/installprograms')
+     for name=temp rowname=x do
+      if right(x[1],4)='.cgi' and count(x[1],'_')=0 then
+       ver=replace(replace(x[1],'asetup',''),'.cgi','')
+       vers=appends(vers,ver)
+      /if
+     /for
+     vers=sortcol(vers,1)
+     ASETUPVER=vers[1,1]
+    /if
+                putval('/apps/multisite/defaults.txt','accessdomain',accessdomain )
+                putval('/apps/multisite/defaults.txt','siteroot'    ,siteroot     )
+                putval('/apps/multisite/defaults.txt','userprefix'  ,userprefix   )
+                putval('/apps/multisite/defaults.txt','vhostsfile'  ,vhostsfile   )
+                putval('/apps/multisite/defaults.txt','sudouser'    ,sudouser     )
+                putval('/apps/multisite/defaults.txt','sudo'        ,sudo         )
+                putval('/apps/multisite/defaults.txt','asetup'      ,asetup       )
+                putval('/apps/multisite/defaults.txt','asetupver'   ,asetupver    )
+                putval('/apps/multisite/defaults.txt','apisecret'   ,apisecret    )
+
+   /if
+
+
+
+        PRIVATE=htmlos.conf.HTMLOSPrivate
+         PUBLIC=htmlos.conf.DocumentPath
+          CACHE=htmlos.conf.HTMLOSCache
+         SCRIPT=htmlos.conf.HTMLOSInstallDir
+
+
+
+
+
+ # DIRECTORY STRUCTURE
+ #
+ # /http/
+ #      /httpd   <== Apache config files go in here /etc/httpd/conf/httpd.conf has 1 line "Include /http/httpd/conf/httpd.conf"
+ #      /root    <== This is the main controller aestiva installation for the server, it runs addsite.lib
+ #      /users   <== All Aestiva installations go in here
+/#
+
+
+
+
+function multisite_info(kind,options) locals temp do
+ if kind='version' then
+  copy file='/apps/multisite/version.txt' to temp /copy
+  return temp /return
+ /if
+ return 'ERROR: Unknown request ('+kind+').' /return
+/function
+
+
+
+function isalphanumeric(text) locals ISALPHANUM,x,c,t do
+ ISALPHANUM='TRUE'
+ for name=x value=1 to length(text) do
+  c=middle(text,x,x)
+  t=getascii(c)
+  if t<48 or  t>122 then ISALPHANUM='FALSE' BREAK /if
+  if t>57 and t<97  then ISALPHANUM='FALSE' BREAK /if
+ /for
+ return ISALPHANUM /return
+/function
+
+function cat(path,opt) locals temp,q do
+ q=''
+ temp=trimright(syscall('Directory listing',SUDO+'bin/cat'+' '+opt+' '+path))
+ return temp /return
+/function
+
+
+function dir(path,opt) locals temp,q do
+ q=''
+ temp=trimright(syscall('Directory listing',SUDO+'bin/ls'+' '+opt+' '+path))
+ temp=split(temp,ascii(10))
+ return temp /return
+/function
+
+function cp(f,t) locals temp,q do
+ q=''
+ temp=syscall('File Copy',SUDO+'bin/cp '+f+' '+t)
+ return temp /return
+/function
+
+
+function cpdir(f,t) locals temp,q do
+ q=''
+ temp=syscall('File Copy',SUDO+'bin/cp -R '+f+' '+t)
+ return temp /return
+/function
+
+function mv(f,t) locals temp,q do
+ q=''
+ temp=syscall('File/DIR Move',SUDO+'bin/mv '+f+' '+t)
+ return temp /return
+/function
+
+
+
+function chmod(p,t) locals temp,q do
+ temp=syscall('chmod',SUDO+'bin/chmod '+t+' '+p)
+ return temp /return
+/function
+
+function chown(p,o,g) locals temp,q do
+ temp=syscall('chown',SUDO+'bin/chown '+o+':'+g+' '+p)
+ return temp /return
+/function
+
+function chownall(p,o,g) locals temp,q do
+ temp=syscall('chown',SUDO+'bin/chown -R '+o+':'+g+' '+p)
+ return temp /return
+/function
+
+
+
+function keygen(f) locals temp do
+ # 
+ # ssh-keygen -t rsa -N "" -f my.key
+ # keygen(SITEROOT+USERPREFIX+sites_site+'/.ssh/id_rsa')
+/#
+ temp=syscall('ssh-keygen',SUDO+'usr/bin/ssh-keygen -t rsa -N "" -f '+f)
+ return temp /return
+/function
+
+
+
+
+function rm(f) locals temp,q do
+ q=''
+ temp=syscall('File Remove',SUDO+'bin/rm '+f)
+ return temp /return
+/function
+
+function forcerm(f) locals temp,q do
+ q=''
+ temp=syscall('File Remove',SUDO+'bin/rm -R -f '+f)
+ return temp /return
+/function
+
+function mkdir(f) locals temp,q do
+ q=''
+ temp=syscall('Make Directory',SUDO+'bin/mkdir '+f)
+ return temp /return
+/function
+
+function link(f) locals temp,q do
+ q=''
+ temp=syscall('Link',SUDO+'bin/ln '+f)
+ return temp /return
+/function
+
+
+function adduser(p) locals temp,q do
+ temp=syscall('adduser',SUDO+'usr/sbin/adduser '+p)
+ return temp /return
+/function
+
+
+function apachectl(p) locals temp,q do
+ temp=syscall('apachectl',SUDO+'usr/sbin/apachectl '+p)
+ return temp /return
+/function
+
+
+function userdel(p) locals temp,q do
+ temp=syscall('userdelete',SUDO+'usr/sbin/userdel --force --remove '+p)
+ return temp /return
+/function
+
+
+
+function isunixdir(p) locals temp,q do
+ temp=syscall('isdir',SUDO+'bin/cat '+p+RD2GTAMP1)
+ if count(temp,': Is a directory')=1 then temp='TRUE' else temp='FALSE' /if
+ return temp /return
+/function
+
+
+function isunixfile(thefile) locals temp do
+ temp=trim(syscall('isdir',SUDO+'/usr/bin/test -f '+thefile+' ; /bin/echo $?'))
+ if temp=1 then temp='FALSE' else temp='TRUE' /if
+ return temp /return
+/function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function cleanit(text) locals x do
+ while count(text,' '+lf)>0 do
+  text=replaceall(text,' '+lf,lf)
+ /while
+ while count(text,lf+lf)>0 do
+  text=replaceall(text,lf+lf,lf)
+ /while
+ return text /return
+/function
+
+
+
+
+
+
+
+
+
+
+function rebuild_virtual_hosts()
+ locals
+  temp,users,user,shortuser,userdomains,x,i,n,text,virtualhosts_template,virtualhosts_default_template,userstatus,u,virtualdefault,add_default_virtual_host,reallydirty,
+  keypaths,keypath,
+  n_DOMAIN,
+  n_USER,
+  n_SHORTUSER,
+  n_SCRIPTDOMAIN,
+  n_ACCESSDOMAIN,
+  n_ISHTTPS,
+  n_ISHTTP,
+  n_SITEROOT,
+  n_SSLKEY,
+  n_SSLCERT,
+  n_SSLCERTCA,
+  n_OFFLINE,
+  n_HTMLOS,
+  n_DEFAULTDOMAIN,
+  n_DEBUG,
+  n_ISDEFAULT
+ do
+ userstatus='ERROR'
+ virtualdefault='ERROR'
+ copy file="/apps/multisite/template/virtualhosts.txt" to virtualhosts_template /copy
+ copy file="/apps/multisite/template/virtualhosts_default.txt" to virtualhosts_default_template /copy
+ text=''
+ users=multisite_users() # Will return users for server or users for wrapperdomain /#
+
+ reallydirty=isdirty('/apps/multisite','virtualhoststemplates')
+
+ for name=users rowname=x do
+  if left(x[1],length(USERPREFIX))=USERPREFIX then
+
+
+
+
+   USER=X[1]
+   SHORTUSER=REPLACE(X[1],USERPREFIX,'')
+
+   copy file="/apps/multisite/users/"+USER+"/domains.txt" ts="," to userdomains /copy
+   userdomains=verify_user_domains(userdomains)
+
+   USERDOMAINS[1,1]=SHORTUSER
+   USERDOMAINS[2,1]='YES'
+
+   n=1
+   for name=userdomains rowname=y do
+    n_DOMAIN        = 1
+    n_USER          = 2
+    n_SHORTUSER     = 3
+    n_SCRIPTDOMAIN  = 4
+    n_ACCESSDOMAIN  = 5
+    n_HTMLOS        = 6
+    n_ISHTTPS       = 7
+    n_ISHTTP        = 8
+    n_SITEROOT      = 9
+    n_SSLKEY        = 10
+    n_SSLCERT       = 11
+    n_SSLCERTCA     = 12
+    n_OFFLINE       = 13
+    n_DEFAULTDOMAIN = 14
+    n_DEBUG         = 15
+    n_ISDEFAULT     = 16  # When a matching hostname is not found this user will be used user_default /#
+    i='ERROR'
+
+
+
+    i[n_DOMAIN]         = y[1]
+    i[n_USER]           = USER                 if reallydirty='TRUE' then make_dirty('/apps/multisite',i[n_USER]) /if
+    i[n_SHORTUSER]      = SHORTUSER
+
+    if i[n_DOMAIN]=i[n_SHORTUSER] and i[n_SHORTUSER]='default' then
+     i[n_ISDEFAULT]='TRUE';
+    else
+     i[n_ISDEFAULT]='ERROR';
+    /if
+
+    i[n_DEFAULTDOMAIN]  = y[5]
+
+    if y[2]='yes' then
+     i[n_SCRIPTDOMAIN]   = '/script/'+y[1]+'/'
+    else
+     i[n_SCRIPTDOMAIN]   = '/script/'+y[5]+'/'
+    /if
+
+    i[n_ACCESSDOMAIN]   = ACCESSDOMAIN
+
+    i[n_OFFLINE]=y[4]
+
+
+
+keypaths[1,1]=rsa_keypath+'/'+user
+keypaths[1,2]=rsa_keypath+'/'+y[1]
+if left(y[1],4)='www.' then
+ keypaths[1,3]=rsa_keypath+'/'+replace(y[1],'www.','')
+else
+ keypaths[1,3]=rsa_keypath+'/www.'+y[1]
+/if
+
+
+
+for name=keypaths rowname=keypath do
+
+    # Ok we look and see if we have a signed certificate /#
+    info=rsa_get_info(keypath+'.crt')
+    if left(info,5)='ERROR' and rows(info)=1 then info='ERROR' /if
+    if info<>'ERROR' then
+     info=namespace(info,'.crt.')
+    /if
+    SIGNED_DOMAINS='ERROR'
+    SIGNED_DOMAINS=getvalues(info,'.crt.DNS.##')
+    SIGNED_DOMAINS=nodups(appends(SIGNED_DOMAINS,getvalue(info,'.crt.subject_CN')))
+    found='ERROR'
+    for name=SIGNED_DOMAINS rowname=SIGNED_DOMAIN do
+     if SIGNED_DOMAIN[1]=i[n_DOMAIN]+'.'+ACCESSDOMAIN then found='TRUE' BREAK /if
+     if SIGNED_DOMAIN[1]=i[n_DOMAIN]                  then found='TRUE' BREAK /if
+    /for
+
+i[n_DEBUG]=i[n_DOMAIN]
+
+    if found='ERROR' then
+     i[n_ISHTTPS]       = 'ERROR'
+     i[n_ISHTTP]        = 'TRUE'
+     i[n_SSLCERT]       = ''
+     i[n_SSLKEY]        = ''
+     i[n_SSLCERTCA]     = ''
+    else
+     i[n_ISHTTPS]       = 'TRUE'
+     if y[3]='only' then
+      i[n_ISHTTP]       = 'ERROR'
+     else
+      i[n_ISHTTP]       = 'TRUE'
+     /if
+     i[n_SSLKEY] =ci_getpath(keypath+'.key')
+     i[n_SSLCERT]=ci_getpath(keypath+'.crt')
+     if isfile(keypath+'CA.crt') then
+      i[n_SSLCERTCA] =ci_getpath(keypath+'CA.crt')
+     else
+      i[n_SSLCERTCA]=''
+     /if
+     BREAK
+    /if
+/for
+
+
+
+
+    i[n_SITEROOT]       =SITEROOT
+
+        #
+        # Ok here we check to see if HTML/OS needs to be setup and verify if it has or has not been setup.
+        # We verify by looking for htmlos.cgi and start.cgi in the script folder
+       /#
+
+    if y[2]='YES' then
+     if isunixfile(i[n_SITEROOT]+i[n_USER]+i[n_SCRIPTDOMAIN]+ 'start'+showwith('.',SCRIPTEXT,''))='TRUE' and 
+        isunixfile(i[n_SITEROOT]+i[n_USER]+i[n_SCRIPTDOMAIN]+'htmlos'+showwith('.',SCRIPTEXT,''))='TRUE' then
+      i[n_HTMLOS]='TRUE'
+     else
+      i[n_HTMLOS]='FALSE'
+     /if
+    else
+     i[n_HTMLOS]='NA'
+    /if
+
+    if i[n_ISDEFAULT]='TRUE' then
+     virtualdefault=i
+    else
+     userstatus=appends(userstatus,i)
+    /if
+
+    $('temp='+template_string(virtualhosts_template,'i[n_#]'))
+    text=text+cleanit(temp)+lf+lf+lf
+
+    if defaultuser=x[1] then
+     i[n_DOMAIN]='default'
+     i[n_SCRIPTDOMAIN]='/script/%0'
+     $('temp='+template_string(virtualhosts_default_template,'i[n_#]'))
+     add_default_virtual_host=showwith('',cleanit(temp),lf+lf+lf)
+    /if
+
+    n=n+1
+   /for
+  /if
+ /for
+ userstatus=appends(userstatus,virtualdefault)
+ copy userstatus to file="/apps/multisite/users/userstatus.txt" ts="," /copy
+ text=text+lf+showwith('',add_default_virtual_host,'')
+ copy text to file='/apps/multisite/.TEMP/virtual_hosts_ready.txt' /copy
+ cp(VHOSTSFILE,ci_getpath('/apps/multisite/virtual_hosts.txt'))
+ copy file='/apps/multisite/virtual_hosts.txt' to temp /copy
+ if temp=text then
+  make_clean('/apps/multisite','virtualhostsapache')
+ else
+  make_dirty('/apps/multisite','virtualhostsapache')
+ /if
+ make_clean('/apps/multisite','virtualhosts')
+ make_clean('/apps/multisite','virtualhoststemplates')
+ syscp("/apps/multisite/template/virtualhosts.txt","/apps/multisite/template/virtualhosts_cache.txt")
+ syscp("/apps/multisite/template/virtualhosts_default.txt","/apps/multisite/template/virtualhosts_default_cache.txt")
+ return text /return
+/function
+
+
+
+
+
+
+ # 
+ # <VirtualHost *:80>
+ # # Servername default
+ #  ServerAlias *
+ #  DocumentRoot "/http/users/user_wbl/public/"
+ #  VirtualDocumentRoot "/http/users/user_wbl/public/"
+ #  VirtualScriptAlias "/http/users/user_wbl/script/%0"
+ #  ScriptAlias /cgi/ /http/users/user_wbl/script/wbl.me/
+ #  ErrorDocument 404 /cgi/start.cgi/NOSESSION/apps/route/startlink.html
+ #  CustomLog /http/users/user_wbl/logs/access.log common
+ #  ErrorLog /http/users/user_wbl/logs/error.log
+ #  ServerAdmin riegel@clearimageonline.com
+ #  DirectoryIndex index.html
+ #  Options -Indexes +FollowSymLinks +Includes
+ #  <directory /http/users/user_wbl/script>
+ #   Include /etc/httpd/conf/script.common
+ #  </directory>
+ #  SuexecUserGroup user_wbl user_wbl
+ # </virtualhost>
+/#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function mkdir_(dir,permissions,owner,group) locals o do
+ o=mkdir(dir)
+ o=chmod(dir,permissions)
+ o=chown(dir,owner,group)
+ return '' /return
+/function
+
+function cp_(f,t,permissions,owner,group) locals o do
+
+
+append 'aatest'+now+' '+f+' '+t+' '+permissions+' '+owner+' '+group+lf to file='/copy.log' /append
+
+ o=cp(f,t)
+ o=chmod(t,permissions)
+ o=chown(t,owner,group)
+ return '' /return
+/function
+
+
+
+function makeskel(from_dir,to_dir,uid,gid) locals s,temp,x,permissions do
+ temp=sysls(from_dir)
+ for name=temp rowname=x do
+
+  s=split(x[1],'_')
+  x[1]=s[1,1]
+  permissions=s[1,2]
+  if length(permissions)=3 and
+     isinteger(permissions) and
+     middle(permissions,1,1)<8 and
+     middle(permissions,2,2)<8 and
+     middle(permissions,3,3)<8 then
+   # Correct format go ahead and proceed /#
+  else
+   if x[4]='DIR' then
+    permissions='755'
+   else
+    permissions='644'
+   /if
+  /if
+
+  if x[1]<>'.TEMP' then
+   if x[4]='DIR' then
+    mkdir_(to_dir+'/'+x[1],permissions,uid,gid)
+    makeskel(from_dir+'/'+x[1],to_dir+'/'+x[1],uid,gid)
+   /if
+   if x[4]='FILE' then
+    if isunixfile(to_dir+'/'+x[1])='TRUE' then
+     o=chmod(to_dir+'/'+x[1],permissions)
+     o=chown(tto_dir+'/'+x[1],uid,gid)
+    else
+     cp_(ci_getpath(from_dir+'/'+x[1]),to_dir+'/'+x[1],permissions,uid,gid)
+    /if
+   /if
+  /if
+ /for 
+ return '' /return
+/function
+
+
+
+
+
+
+
+
+
+
+
+
+ function addskeleton.lib(uid) locals temp,x,i,htmlos.conf,text,r,base,bb do
+   #
+   # temp=NETWEB('http://clearimageonline.com/home/appmanager.bb',50000000,600,'GET','','','/apps/multisite/bb/appmanager.bb')
+  /#
+
+   if left(uid,length(USERPREFIX))<>USERPREFIX then r[1]='ERROR' r[2]='200' r[3]='Invalid user name ('+uid+')' return r /return /if
+
+   base       = SITEROOT+uid
+   bb         = htmlos.conf.HTMLOSPrivate+'/apps/multisite/bb/'
+
+   # Make Directory Structure /#
+   temp=mkdir_(base,           '751',uid,uid)
+   temp=chownall(base,uid,uid)
+   temp=mkdir_(base+'/script', '755',uid,uid)
+
+   # Add Skeleton /#
+   temp=makeskel('/apps/multisite/template/skeleton',base,uid,uid)
+
+   # Add .bb Files /#
+   temp=sysls('/apps/multisite/bb')
+   for name=temp rowname=x do
+    if x[1]='108patch11062014.bb' then
+     if ASETUPVER<=469 then
+      temp=cp_(bb+x[1],base+'/private/system/startup/'+x[1],      '644',uid,uid)
+     /if
+    elif right(x[1],3)='.bb' then
+      temp=cp_(bb+x[1],base+'/private/system/startup/'+x[1],      '644',uid,uid)
+    /if
+   /for
+
+ /function
+
+
+
+
+
+
+
+
+
+
+function getsetting(table,var,default) do
+ temp=getvalue(table,var)
+ if temp='' or temp='ERROR' then temp=default /if
+ return temp /return
+/function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function addHTMLOS(domain,uid,options)
+  locals
+   x,base,template,asetup,posturl,postdata,asetupresult,i,htmlos.conf,text,temp,a,
+   n_BASE,
+   n_SERVICETYPE,
+   n_DOMAIN,
+   n_DEFAULTDOMAIN,
+   n_SCRIPT,
+   n_USER,
+   message,
+   domainlist
+  do
+
+   if right(domain,length(ACCESSDOMAIN))=ACCESSDOMAIN then
+    domain=left(domain,length(domain)-length(ACCESSDOMAIN))
+   /if
+
+   message=''
+
+
+
+
+   if options<>'' and options<>'ERROR' and rows(options)=1 and cols(options)=1 then
+    options=csvtotable(options)
+   /if
+
+   runasetup     = getsetting( options , 'asetup'  , 'FALSE' )
+   usebeta       = getsetting( options , 'usebeta' , 'TRUE'  )
+
+
+   base       = SITEROOT+uid
+   template   = htmlos.conf.HTMLOSPrivate+'/apps/multisite/template/'
+   asetup     = htmlos.conf.HTMLOSPrivate+'/system/installprograms/'
+
+   # Build htmlos.conf from Template /#
+   n_BASE          = 1
+   n_SERVICETYPE   = 2
+   n_DOMAIN        = 3
+   n_SCRIPT        = 4
+   n_USER          = 5
+   n_DEFAULTDOMAIN = 6
+   n_SCRIPTEXT     = 7
+   n_ACCESSDOMAIN  = 8
+
+
+   i='ERROR'
+   i[n_BASE]        = base
+
+
+i[n_SCRIPTEXT]=SCRIPTEXT
+
+found='ERROR'
+copy file='/apps/multisite/users/'+uid+'/domains.txt' ts=',' to domainlist /copy
+for name=domainlist rowname=x do
+ if x[1]=domain then found=x BREAK /if
+/for
+if found='ERROR' then
+   i[n_SERVICETYPE] = 'http'
+else
+ if x[3]='yes' then
+   i[n_SERVICETYPE] = 'https'
+ else
+   i[n_SERVICETYPE] = 'http'
+ /if
+/if
+
+
+
+   i[n_DOMAIN]        = domain+'.'+ACCESSDOMAIN
+
+   i[n_DEFAULTDOMAIN] = getsetting(options,'defaultdomain',DOMAIN)
+
+   i[n_SCRIPT]        = 'script/'+domain
+
+   i[n_USER]          = UID
+
+   i[n_ACCESSDOMAIN]  = ACCESSDOMAIN
+
+
+   # Make Directory Structure /#
+   temp=mkdir_(base,                 '751' , uid , uid )
+   temp=mkdir_(base+'/script',       '755' , uid , uid )
+   temp=mkdir_(base+'/'+i[n_SCRIPT], '755' , uid , uid )
+
+
+
+
+   copy file='/apps/multisite/template/htmlos.txt' to htmlos.conf /copy
+   $('temp='+template_string(htmlos.conf,'i[n_#]'))
+   text=cleanit(temp)
+   copy text to file='/apps/multisite/template/htmlos_'+usernum+'.conf' /copy
+   temp=cp_(template+'htmlos_'+usernum+'.conf',base+'/'+i[n_SCRIPT]+'/htmlos.conf','644',uid,uid)
+
+   htmlos.conf=CSVTOTABLE(text,' ','')
+
+
+   if runasetup='TRUE' then
+
+    # Add asetup /#
+    if isfile('/system/installprograms/asetup'+ASETUPVER+'.cgi') then
+     temp=cp_(asetup+'asetup'+ASETUPVER+'.cgi',base+'/'+i[n_SCRIPT]+'/asetup'+ASETUPVER+'.cgi','755',uid,uid)
+    else
+     r[1]='ERROR' r[2]='200' r[3]='Missing asetup for ('+ASETUPVER+')' return r /return
+    /if
+
+    posturl="http://"+i[n_DOMAIN]+"/cgi-bin/asetup"+ASETUPVER+".cgi/iframe"
+
+    postdata=
+
+    '' +getline(htmlos.conf,'DomainName'      )+
+    '&'+getline(htmlos.conf,'DocumentPath'    )+
+    '&'+getline(htmlos.conf,'PublicURLPrefix' )+
+    '&'+getline(htmlos.conf,'HTMLOSPrivate'   )+
+
+    '&sComplete.x='                 + postprep('33')+
+    '&sComplete.y='                 + postprep('12')+
+    '&sButton='                     + postprep('COMPLETE INSTALL')+
+    '&InstallFile='                 + postprep('asetup'+ASETUPVER+'.cgi')+
+    '&RegName='                     + postprep(domain)+
+    '&cgidir='                      + postprep(i[n_BASE]+'/'+i[n_SCRIPT])+
+
+    '&'+getline(htmlos.conf,'HTMLOSCache'     )+
+    '&'+getline(htmlos.conf,'HTMLOSExtension' )+
+    '&'+getline(htmlos.conf,'MailProgram'     )+
+    '&'+getline(htmlos.conf,'UseRelativePath' )+
+    '&'+getline(htmlos.conf,'BackLimit'       )+
+    '&'+getline(htmlos.conf,'ServiceType'     )+
+    '&'+getline(htmlos.conf,'ScriptPrefix'    )+
+
+    '&UpgradeInstall='+postprep('')
+
+    a=getcoleq(htmlos.conf,1,'HTMLOSPrivate')
+
+    mv( a[2,1]+'/system/password.sys' , a[2,1]+'/system/password.bak' )
+    asetupresult=netweb(posturl,50000,100,'POST',postdata,'')
+    message=message+asetupresult
+
+
+    mv( a[2,1]+'/system/password.bak' , a[2,1]+'/system/password.sys' )
+
+    chown(a[2,1]+'/system/password.sys',i[n_USER],i[n_USER])
+    chmod(a[2,1]+'/system/password.sys','644')
+
+
+   else
+    message='ASETUP DID NOT RUN AS REQUESTED'
+
+
+   /if
+
+   if usebeta='FALSE' then
+    # Rebuild without beta only if its a domain with dots in it /#
+    if count(domain,'.')>0 then
+     i[n_DOMAIN]      = domain
+    /if
+    copy file='/apps/multisite/template/htmlos.txt' to htmlos.conf /copy
+    $('temp='+template_string(htmlos.conf,'i[n_#]'))
+    text=cleanit(temp)
+    copy text to file='/apps/multisite/template/htmlos_'+usernum+'.conf' /copy
+   /if
+   temp=cp_(template+'htmlos_'+usernum+'.conf',base+'/'+i[n_SCRIPT]+'/htmlos.conf','644',uid,uid)
+   sysrm('/apps/multisite/template/htmlos_'+usernum+'.conf')
+   chmod(base+'/cache','755')
+   return message /return
+ /function
+
+
+
+
+
+
+function getline(table,text) locals i do
+ i=getcoleq(table,1,text)
+ return showwith('',i[1,1],'='+postprep(i[2,1])) /return
+/function
+
+
+
+
+function load_restart_apache() locals config,temp do
+ if isfile('/apps/multisite/.TEMP/virtual_hosts_ready.txt') then
+  copy file='/apps/multisite/.TEMP/virtual_hosts_ready.txt'  to config /copy
+ else
+  config=rebuild_virtual_hosts()
+ /if
+ cp(VHOSTSFILE,ci_getpath('/apps/multisite/virtual_hosts.txt'))
+ copy file="/apps/multisite/virtual_hosts.txt" to liveconfig /copy
+ if liveconfig=config then
+  # No need to restart apache, no config changes /#
+  make_clean('/apps/multisite','virtualhosts')
+  return 'SUCCESS: Apache Restart Not needed' /return
+ else
+  copy config to file='/apps/multisite/virtual_hosts.txt' /copy
+  cp(VHOSTSFILE,VHOSTSFILE+'.BAK')
+  cp(ci_getpath('/apps/multisite/virtual_hosts.txt'),VHOSTSFILE)
+  temp=trim(apachectl('configtest'+RD2GTAMP1))
+  if temp='Syntax OK' then
+   make_clean('/apps/multisite','virtualhosts')
+   temp=temp+apachectl('graceful&')
+   return 'SUCCESS: Apache Restart ('+temp+')' /return
+  else
+   cp(VHOSTSFILE+'.BAK',VHOSTSFILE)
+   return 'ERROR: Config Problem, no restart ('+temp+')' /return
+  /if
+ /if
+/function 
+
+
+
+
+
+ #  userdomains Format
+ #
+ #  DOMAIN      HTMLOS          HTTPS     OFFLINE       
+ #-----------------------------------------------------
+ #  FQDN        "YES" or "no"   tba       "YES" or ""
+/#
+
+
+
+function verify_user_domains(userdomains) locals firsthtmlos,x,y,found,temp do
+ # The purpose of this is to make sure colun 5 has the correct domain for aliases
+ # Code to run on userdomains to make sure its formatted correctly
+ # Five Columns
+ # 1 - domainname
+ # 2 - ISHTMLOS
+ # 3 - ISHTTPS
+ # 4 - ?? possible something with https
+ # 5 - Default Domain
+/#
+ userdomains[1,1]=replace(SITES_SITE,USERPREFIX,'')
+ userdomains[2,1]='yes'
+ # 1. Grab first HTML/OS Domain /#
+ firsthtmlos=replace(SITES_SITE,USERPREFIX,'')
+ for name=userdomains rownum=x do
+  if x>1 and userdomains[2,x]='yes' then
+   firsthtmlos=userdomains[1,x]
+   BREAK
+  /if
+ /for
+ if firsthtmlos<>userdomains[1,1] then userdomains[5,1]=firsthtmlos /if
+ # Explicitly set master domains for aliases /#
+ for name=userdomains rownum=x do
+  if userdomains[2,x]='yes' and x>1 then firsthtmlos=userdomains[1,x] /if
+  if userdomains[2,x]<>'yes' then
+   if userdomains[5,x]='' or userdomains[5,x]='ERROR' then userdomains[5,x]=firsthtmlos /if
+   found='ERROR'
+   for name=userdomains rowname=y do
+    if y[2]='yes' and y[1]=userdomains[5,x] then found='TRUE' BREAK /if
+   /for
+   if found='ERROR' then userdomains[5,x]=firsthtmlos /if
+  else
+   userdomains[5,x]=firsthtmlos
+  /if
+ /for
+ # Sort by htmlos then by alias /#
+ temp='ERROR'
+ for name=userdomains rowname=x do
+  if x[2]='yes' then
+   temp=appends(temp,x)
+   for name=userdomains rowname=y do
+    if y[2]<>'yes' and y[5]=x[1] then
+     y[3]=x[3]
+     y[4]=x[4]
+     temp=appends(temp,y)
+    /if
+   /for
+  /if
+ /for
+ return temp /return
+/function
+
+
+function http.getas(url,host) locals req do
+ req='ERROR' req[1]='request:url' req[2]=url
+ return appends(req,httptotable(curl_include_response_header(url,'--connect-timeout 1','GET','','Host: '+host))) /return
+/function
+
+
+
+
+
+function check_connections_user_domains(userdomains) locals r,i,HTTPSDOMAINS,x,t,temp do
+ r=random(1000,9999) copy r to file='/.well-known/acme-challenge/'+r+'-'+usernum+'.txt' /copy
+ sysfixpublic('/.well-known/acme-challenge/'+r+'-'+usernum+'.txt')
+ i=1
+ HTTPSDOMAINS=''
+ for name=userdomains rowname=x do
+  userdomains[6,i]=''
+  userdomains[7,i]=''
+  userdomains[8,i]=''
+  userdomains[9,i]=''
+  userdomains[10,i]=''     # DNS Flag /#
+
+  if isclean('/apps/multisite','virtualhosts')='TRUE' then
+   if count(x[1],'.')>0 then
+    if getvalue(http.getas('http://127.0.0.1/.well-known/acme-challenge/'+r+'-'+usernum+'.txt',x[1]),'body')=r then
+     userdomains[6,i]='yes'
+     HTTPSDOMAINS=showwith('',HTTPSDOMAINS,lf)+x[1]
+     if getvalue(http.getas('http://'+x[1]+'/.well-known/acme-challenge/'+r+'-'+usernum+'.txt',x[1]),'body')=r then
+      userdomains[10,i]='yes'  # DNS Flag, yes if DNS is resolving to here /#
+     /if
+    /if
+    if getvalue(http.getas('https://127.0.0.1/.well-known/acme-challenge/'+r+'-'+usernum+'.txt',x[1]),'body')=r then
+     userdomains[7,i]='yes'
+    /if
+   /if
+
+   if getvalue(http.getas('http://127.0.0.1/.well-known/acme-challenge/'+r+'-'+usernum+'.txt',x[1]+'.'+ACCESSDOMAIN),'body')=r then
+    if count(x[1],'.')=0 then userdomains[3,i]='yes' /if
+    userdomains[8,i]='yes'
+    HTTPSDOMAINS=showwith('',HTTPSDOMAINS,lf)+x[1]+'.'+ACCESSDOMAIN
+   /if
+
+   if getvalue(http.getas('https://127.0.0.1/.well-known/acme-challenge/'+r+'-'+usernum+'.txt',x[1]+'.'+ACCESSDOMAIN),'body')=r then
+    userdomains[9,i]='yes'
+   /if
+  /if
+ 
+  i=i+1
+ /for
+ sysrm('/.well-known/acme-challenge/'+r+'-'+usernum+'.txt')
+ tagresults='ERROR'
+ tagresults=httpsdomains
+ return userdomains /return
+/function
+
+
+
+
+
+function multisite_users() locals temp,users do
+ if domainname=wrapperdomains[1] then
+  users[1,1]=trim(syscall('','usr/bin/whoami'))
+ else
+  temp=cp('/etc/passwd',htmlos.conf.HTMLOSPrivate+'/apps/multisite/users/passwd.txt')
+  copy file='/apps/multisite/users/passwd.txt' ts=':' to users /copy
+  users=sortcol(users,1)
+ /if
+ return users /return
+/function
+
+

@@ -1,0 +1,554 @@
+<<
+ # 
+ # 
+ # To arrive here use the following functions
+ #  pagelink('/apps/private/'+domainid+'/router.overlay;OVERLAYNAME')
+ #  pagelink1('/apps/private/'+domainid+'/router.overlay;OVERLAYNAME')
+ #  pagelink3('/apps/private/'+domainid+'/router.overlay;OVERLAYNAME',varname,varvalue)
+ # 
+/#
+
+
+
+
+goto forensics(page+'|'+page_+lf+'Use goto page_ instead of goto page')
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title></title>
+ </head>
+ <body>
+  This should never run
+
+  This page is only used with the semicolon overlay notation and also uses get_() to extract the return page
+
+  To navigate away at the end of each overlay use page_ in lieu of page. page will take you to this page
+
+
+  the get_() function will set page_ and will also set 
+
+ </body>
+</html>
+
+
+
+
+
+
+
+<<overlay createserver get_()
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+
+
+ # 
+ # "RADIO","id3748585","HTML/OS Version","Choose the version you want installed on this server.","asetup","REQUIRED","",""
+ # "SUBMIT","id3748725","Create Server","","","","",""
+/#
+
+ form_id3748585='ERROR'
+ form_id3748725='ERROR'
+ form_id26153517='ERROR'
+ form_id26918313='ERROR'
+
+ asetupversion='ERROR'
+ newservername='ERROR'
+ newserverpassword='ERROR'
+ mybutton='ERROR'
+
+
+ $(getvariables(sysstdin,'
+  asetupversion=EXTERNAL_form_id3748585
+  newservername=lower(unpostprep(EXTERNAL_form_id26153517))
+  newserverpassword=unpostprep(EXTERNAL_form_id26918313)
+  mybutton=EXTERNAL_form_id3748725
+ '))
+
+ copy file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' to servers /copy
+
+
+  formvariable='form_createserver'
+  form='ERROR'
+  form[1,1]='form_id26153517' form[2,1]=replaceall(newservername,'+',' ')
+  form[1,2]='form_id3748585'  form[2,2]=asetupversion
+  @formvariable=form
+
+
+
+ if asetupversion<36 or asetupversion>999 or asetupversion='' or asetupversion='ERROR' then 
+  messagefor('create','Choose a Version')
+  goto route(tag)
+ /if
+
+ if isalphanumeric(newservername)='FALSE' then
+  messagefor('create','ERROR: Server Name must be alphanumeric.')
+  goto route(tag)
+ /if
+
+ if newservername='root' then
+  messagefor('create','ERROR: '+newservername+' is a reserved name.')
+  goto route(tag)
+ /if
+
+
+ temp=curl(MASTERDOMAIN+'/cgi-bin/start.cgi/NOSESSION/apps/multisite/asetup.html?source=/auth/'+encrypt(random(10000,99999)+hash(newservername)+'|'+newservername,APISECRET+'|'+nowUTC()+'|isuser'),0,'GET','','')
+
+ if temp<>'NO' then
+  messagefor('create','ERROR: '+newservername+' is not available.('+temp+')')
+  goto route(tag)
+ /if
+
+ temp=split(unpostprep(asetupversion),':') asetupversion=temp[1,1]
+
+ i='ERROR' i[1]=newservername i[2]=asetupversion i[3]=encrypt(random(1000,9999)+'|'+newserverpassword,APISECRET)
+
+
+ if autoactivate="yes" then
+  visitserver=i[1]+'|'+i[2]+'|'+i[3]
+  theurl=MASTERDOMAIN+'/cgi-bin/start.cgi/NOSESSION/apps/multisite/asetup.html?source=/auth/'+encrypt(random(10000,99999)+hash(visitserver)+'|'+visitserver,APISECRET+'|'+nowUTC()+'|activate')
+  temp=curl(theurl,0,'GET','','')
+  if left(temp,5)='ERROR' then
+   send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Created','<html>A Server has been created: '+x[1]+'|'+x[2]+ci_table(thisuser)+'</html>')
+   messagefor('general',temp)
+  else
+   servers=appends(servers,i)
+   copy servers to file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' /copy
+   send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Created','<html>A Server has been created: '+x[1]+'|'+x[2]+ci_table(thisuser)+'</html>')
+   messagefor('general',temp)
+  /if
+  goto route(tag)
+ else
+  servers=appends(servers,i)
+  copy servers to file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' /copy
+  send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Created','<html>A Server has been created: '+x[1]+'|'+x[2]+ci_table(thisuser)+'</html>')
+  messagefor('create','Server Added')
+  goto route(tag)
+ /if
+>>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<<overlay removeserver get_()
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+ copy file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' to servers /copy
+ therow='ERROR'
+ found='ERROR'
+ if removeserver<>'' and removeserver<>'ERROR' then
+
+  gotone='FALSE'
+  found='TRUE'
+  while found='TRUE' do
+   for name=servers rownum=x do
+    if removeserver=servers[1,x] then therow=x FOUND='TRUE' gotone='TRUE' BREAK /if
+    found='ERROR'
+   /for
+   if found='TRUE' then
+    servers=delrow(servers,therow)
+   /if
+  /while
+
+ /if
+
+
+ if gotone='TRUE' then
+  # START EXECUTE THE DELETE /#
+    copy servers to file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' /copy
+    temp=curl(MASTERDOMAIN+'/cgi-bin/start.cgi/NOSESSION/apps/multisite/asetup.html?source=/auth/'+encrypt(random(10000,99999)+hash(removeserver)+'|'+removeserver,APISECRET+'|'+nowUTC()+'|userdelete'),0,'GET','','')
+  # END EXECUTE THE DELETE /#
+  messagefor('general','Server Removed:'+viewsource(temp)+'.')
+ else
+  messagefor('general','No action taken')
+ /if
+
+ send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Removed','<html>A Server has been removed: '+removeserver+ci_table(thisuser)+'</html>')
+ goto route(tag)
+>>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<<overlay removeserveralias get_()
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+
+ copy file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' to servers /copy
+ therow='ERROR'
+ if removeserver<>'' and removeserver<>'ERROR' then
+  for name=servers rownum=x do
+   if removeserver=servers[3,x] then therow=x /if
+  /for
+ /if
+ if therow<>'ERROR' then
+  # START EXECUTE THE DELETE /#
+    if servers[2,therow]='ALIAS' then
+     temp=curl(MASTERDOMAIN+'/cgi-bin/start.cgi/NOSESSION/apps/multisite/asetup.html?source=/auth/'+encrypt(random(10000,99999)+hash(removeserver)+'|'+removeserver,APISECRET+'|'+nowUTC()+'|aliasdelete'),0,'GET','','')
+     if temp='NO' then
+      messagefor('general','Server Alias Not Removed')
+     else
+      servers=delrow(servers,therow)
+      copy servers to file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' /copy
+      messagefor('general','Server Alias Removed')
+     /if
+    else
+     messagefor('general','Server Alias Not Removed')
+    /if
+  # END EXECUTE THE DELETE /#
+ else
+  messagefor('general','No action taken')
+ /if
+ send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Removed','<html>A Server has been removed: '+removeserver+ci_table(thisuser)+'</html>')
+ goto route(tag)
+>>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<<overlay visitserver get_()
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+ temp=split(visitserver,'|')
+ if temp[1,1]<>'' and temp[1,1]<>'ERROR' and isalphanumeric(temp[1,1])='TRUE' then
+  if temp[1,2]='ALIAS' then
+   url='http://'+temp[1,3]
+  else
+   url='http://'+temp[1,1]+'.'+ACCESSDOMAIN
+  /if
+  temp9=trim(curl(url+'/cgi-bin/start.cgi',0,'GET','',''))
+  if temp9='NOTSETUP' or count(temp9,'Aestiva HTML/OS')=0 or count(temp9,'served by HTML/OS')>0 then
+   exitgoto url+'/auth/'+encrypt(random(10000,99999)+hash(visitserver)+'|'+visitserver,APISECRET+'|'+nowUTC())
+  /if
+  messagefor('general','Activate Successful'+viewsource(temp9))
+  goto route(tag)
+ else
+  messagefor('general','Invalid/Expired Link')
+  goto route(tag)
+ /if
+>>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<<overlay installkey get_()
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+
+function get_key_as_openssh(key) locals keys,thekey,x,therows,thiskey,kind,therow,keyheader,marker,markerend do
+ marker   ='---- BEGIN SSH2 PUBLIC KEY ----'
+ markerend='---- END SSH2 PUBLIC KEY ----'
+ if count(key,marker)>0 and count(key,markerend)>0 then
+  key=replaceall(key,marker,markerend+lf+marker)
+  keys=split(key,markerend)
+  thekey=''
+  for name=keys rowname=x do
+   if count(x,marker)>0 then
+    therows=split(x,lf)
+    keyheader=''
+    thiskey=''
+    kind='rsa'
+    for name=therows rowname=therow do
+     if count(therow[1],': ')>0 then
+      keyheader=keyheader+showwith('# ',therow[1],lf)
+      if count(therow[1],'DSA')>0 and count(therow[1],'comment')>0 then
+       kind='dss'
+      /if
+     elif count(therow[1],marker)>0 then
+      # Ignore /#
+     else
+      thiskey=thiskey+therow[1]
+     /if
+    /for
+    if thiskey<>'' and thiskey<>'ERROR' then
+     thekey=thekey+'###############'+lf+keyheader++'ssh-'+kind+' '+thiskey+' automatically-converted@'+ACCESSDOMAIN+lf+lf
+    /if
+   else
+    thekey=thekey+x+lf
+   /if
+  /for
+ else
+  thekey=key
+ /if
+ return thekey /return
+/function
+
+
+
+
+ copy file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' to servers /copy
+ therow='ERROR'
+ if remoteserver<>'' and remoteserver<>'ERROR' then
+  for name=servers rownum=x do
+   if remoteserver=servers[1,x] then therow=x /if
+  /for
+ /if
+ if therow<>'ERROR' then
+  copy file='/apps/private/'+domainid+'/publickey-'+remoteserver+'.txt' to thekey /copy
+
+  thekey=get_key_as_openssh(thekey)
+
+  theurl=MASTERDOMAIN+'/cgi-bin/start.cgi/NOSESSION/apps/multisite/asetup.html?source=/auth/'+encrypt(random(10000,99999)+hash(remoteserver)+'|'+remoteserver+'|'+thekey,APISECRET+'|'+nowUTC()+'|installkey')
+  temp=curl(theurl,0,'GET','','')
+
+  if trim(temp)<>'OK' then
+   messagefor('general','ERROR Installing key (try later): '+temp)
+  else
+   messagefor('general','Key Installed Successfully ('+remoteserver+')')
+   send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Key Installed','<html>Public Key has been installed: '+remoteserver+ci_table(thisuser)+'</html>')
+  /if
+
+ else
+  messagefor('general',get_+'|'+remoteserver+'|'+therow+'No action taken')
+ /if
+
+ goto route(tag)
+>>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<<overlay createserveralias get_()
+expand file='/apps/private/'+domainid+'/prefs.lib' /expand
+
+
+
+
+ function validatedomain(url) locals temp,last,x,char,valid,t do
+  if url='' or url='ERROR' then return 'ERROR: Missing' /return /if
+  if count(url,'.')=0 then return 'ERROR: Missing .' /return /if
+  url=lower(url)
+  last=length(url)
+  valid='TRUE'
+  next=middle(url,1,1)
+  for name=x value=1 to last do
+   char=next
+   if x<>last then next=middle(url,x+1,x+1) else next='' /if
+   if char='-' or char='.' then
+    if x=1 or x=last or next='.' then
+     valid='ERROR: Misplaced '+char BREAK
+    /if
+   else
+    t=getascii(char)
+    if t<48 or  t>122 then VALID='ERROR: Invalid character '+char BREAK /if
+    if t>57 and t<97  then VALID='ERROR: Invalid character '+char BREAK /if
+   /if
+  /for
+  return valid /return
+ /function
+
+ # 
+ # "TEXT","id26997391","Domain Name","","","REQUIRED","",""
+ # "SELECT","id26997406","Point to","","myexistingservers","REQUIRED","",""
+ # "SUBMIT","id26997467","","","","","",""
+ # 
+/#
+
+ form_id26997391='ERROR'
+ form_id26997406='ERROR'
+ form_id26997467='ERROR'
+
+
+ newdomainname='ERROR'
+ pointtoservername='ERROR'
+ mybutton='ERROR'
+
+
+ $(getvariables(sysstdin,'
+  newdomainname=EXTERNAL_form_id26997391
+  pointtoservername=EXTERNAL_form_id26997406
+  mybutton=EXTERNAL_form_id26997467
+ '))
+
+  formvariable='form_createserveralias'
+  form='ERROR'
+  form[1,1]='form_id26997391' form[2,1]=replaceall(newdomainname,'+',' ')
+  form[1,2]='form_id26997406' form[2,2]=pointtoservername
+  @formvariable=form
+
+
+
+
+if validatedomain(newdomainname)<>'TRUE' or (count(newdomainname,ACCESSDOMAIN)=1 and count(newdomainname,'.')=2) then
+  messagefor('general','ERROR: '+newdomainname+' invalid domain')
+  goto route(tag)
+/if
+
+
+
+ copy file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' to servers /copy
+
+
+ found='ERROR'
+ for name=servers rowname=x do
+  if x[1]=pointtoservername then found='TRUE' z=x BREAK /if
+ /for
+
+ if found='ERROR' then
+  messagefor('general','ERROR: '+pointtoservername+' not found.')
+  goto route(tag)
+ /if
+
+
+ found='ERROR'
+ for name=servers rowname=x do
+  if x[2]='ALIAS' and x[3]=newdomainname then FOUND='TRUE' BREAK /if
+ /for
+
+
+ if 1=2 and FOUND='TRUE' then
+  messagefor('general','ERROR: duplicate.')
+  goto route(tag)
+ /if
+
+
+
+ i='ERROR' i[1]=pointtoservername i[2]='ALIAS' i[3]=newdomainname
+
+ if autoactivate="yes" then
+  visitserver=i[1]+'|'+i[2]+'|'+i[3]+'|'+z[2]+'|'+z[3]
+  theurl=MASTERDOMAIN+'/cgi-bin/start.cgi/NOSESSION/apps/multisite/asetup.html?source=/auth/'+encrypt(random(10000,99999)+hash(visitserver)+'|'+visitserver,APISECRET+'|'+nowUTC()+'|activate')
+  temp=curl(theurl,0,'GET','','')
+
+  if left(temp,5)='ERROR' then
+   send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Alias Created','<html>A Server Alias has been created: '+x[1]+'|'+x[2]+ci_table(thisuser)+'</html>')
+   messagefor('general',temp)
+  else
+   servers=appends(servers,i)
+   copy servers to file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' /copy
+   send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Alias Created','<html>A Server Alias has been created: '+x[1]+'|'+x[2]+ci_table(thisuser)+'</html>')
+   messagefor('general',temp)
+  /if
+  goto route(tag)
+ else
+  servers=appends(servers,i)
+  copy servers to file='/domain/'+domainid+'/users/'+thisuser[1]+'.csv' ts=',' /copy
+  send_email('riegel@clearimageonline.com','riegel@clearimageonline.com','Server Alias Created','<html>A Server Alias has been created: '+x[1]+'|'+x[2]+ci_table(thisuser)+'</html>')
+  messagefor('general','Server Alias Added'+autoactivate)
+  goto route(tag)
+ /if
+
+>>

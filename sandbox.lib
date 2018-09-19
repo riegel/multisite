@@ -1,0 +1,116 @@
+# Add Functions you will allow to be executed here /#
+
+
+
+function SANDBOX_loop(table,template) locals x,temp,out,i do
+ if table='' or table='ERROR' then
+  return '' /return
+ /if
+ out='' temp=''
+ for name=table colnum=x do
+  template=replaceall(template,'['+x+']','{'+x+'}')
+ /for
+ for name=table rowname=x do
+  $('temp='+template_string(template,'x[#]'))
+  out=out+temp
+ /for
+ return out /return
+/function
+
+
+
+function SANDBOX_lower(text) do
+ return lower(text) /return
+/function
+
+
+
+function SANDBOX_FormatDate(d,f) do
+ return moment(d,f) /return
+/function
+
+
+
+function SANDBOX_ReplaceAll(a,b,c) do
+ return replaceall(a,b,c) /return
+/function
+
+
+function SANDBOX_Replace(a,b,c) do
+ return replace(a,b,c) /return
+/function
+
+
+
+function SANDBOX_Choose(a,b) do
+ if a='' or a='ERROR' or a=0 or a='false' or a='null' then
+  return b /return
+ else
+  return a /return
+ /if
+/function
+
+
+
+function SANDBOX_ShowIf(a,b) do
+ return showIf(a,b) /return
+/function
+
+
+
+function VAR_EXPORT(varname) do
+
+if
+
+   varname='ACCESSDOMAIN' or
+   varname='MASTERDOMAIN' or
+   varname='SITEROOT' or
+   varname='USERPREFIX' or
+   varname='SUDO' or
+   varname='VHOSTSFILE' or
+
+   varname='PRIVATE' or
+   varname='PUBLIC' or
+   varname='CACHE' or
+   varname='SCRIPT' or
+
+   varname='VIRTUALHOSTS_ALIASES' or
+   varname='VIRTUALHOSTS_USERS' or
+   varname='VIRTUALHOSTS_DOMAINS' or
+   varname='VIRTUALHOSTS_SECURE'
+
+
+
+
+ then
+
+   return @varname /return
+
+/if
+
+
+if varname='VIRT_DOMAIN' then return VIRT_DOMAIN /return /if
+if varname='VIRT_UID'    then return VIRT_UID    /return /if
+
+
+
+if varname='SYSTEMUSERS' then return SYSTEMUSERS /return /if
+if varname='DOMAINS'     then return DOMAINS     /return /if
+if varname='ALIASES'     then return ALIASES     /return /if
+if varname='CERTS'       then return CERTS       /return /if
+
+
+
+
+
+   if varname='now'              then return now               /return
+ elif varname='today'            then return today             /return
+ else                                 return '[UNDEFINED:'+varname+']'   /return
+  /if
+/function
+
+
+
+
+
+

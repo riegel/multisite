@@ -1,0 +1,98 @@
+<<
+ # Should always start in apiaccess.html, that is where vars are set /#
+
+ entity_var=api_user
+
+ expand file=entitydir+entity_var+'.txt' /expand
+
+ copy file=entitydir+entity_var+'.pem' to keys_pubkey /copy
+
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title><<entitytexts>></title>
+  <<commonheader>>
+ </head>
+ <body class="container">
+<<
+ if apimethod="RSA-SHA1" then 
+  display ^
+  <form action="savepubkey" accept-charset="utf-8">
+  ^+HTML_authorize_variables('mybutton') /display
+ /if
+>>
+
+
+  <<nav()>>
+
+  <div class="row">
+   <div class="col-md-12">
+    <h3><<entitytext>>: <<entity_var>></h3>
+    <<showwith('<div class="alert alert-success" role="alert">',message(0),'</div>')>>
+   </div>
+  </div>
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="ConsumerKey">Consumer Key</label>
+     <input type="text" name="ConsumerKey" class="form-control" placeholder="Key" READONLY>
+    </div>
+   </div>
+  </div>
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="ConsumerSecret">Consumer Secret</label>
+     <input type="text" name="ConsumerSecret" class="form-control" placeholder="Secret" READONLY>
+    </div>
+   </div>
+  </div>
+
+
+<<
+ if apimethod="RSA-SHA1" then 
+  display ^
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <label for="keys_pubkey">Public Key</label>
+     <input type="hidden" name="entitydir" value="^+e_(entitydir)+^">
+     <input type="hidden" name="entity_var" value="^+e_(entity_var)+^">
+     <textarea name="keys_pubkey" wrap="off" class="form-control" placeholder="i.e. billy@example.com" style="font-family:courier;font-size:8pt;height:160px;"></textarea>
+    </div>
+   </div>
+  </div>
+
+
+  <div class="row">
+   <div class="col-md-12">
+    <div class="form-group">
+     <button type="submit" name="mybutton" value="save" class="form-control">Save Public Key</button>
+    </div>
+   </div>
+  </div>
+
+
+
+  </form>
+^ /display /if
+>>
+
+
+ </body>
+</html>
+<<overlay savepubkey
+ message='Public Key Submitted'
+ entitydir=d_(entitydir)
+ entity_var=d_(entity_var)
+ if mybutton="save" then
+  copy keys_pubkey to file=entitydir+entity_var+'.pem' /copy
+  sysfixprivate(entitydir+entity_var+'.pem')
+ /if
+ message(message)
+ goto page
+>>

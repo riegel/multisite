@@ -1,0 +1,279 @@
+<<
+ expand file="/system/clearimage/DLL.lib" /expand
+ expand file="local.lib" /expand
+ expand file="addsite.lib" /expand
+>>
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8">
+  <title>Multisite</title>
+  <<commonheader>>
+ </head>
+ <body class="container">
+  <<nav()>>
+  <div class="row">
+   <div class="col-md-12">
+    <h1>Settings</h1>
+
+    <form action="saveprefs" method="post">
+
+
+<<
+if domainname=wrapperdomains[1] then else
+ display ^
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="accessdomain">Access Domain</label>
+       <input type="text" name="accessdomain" class="form-control" placeholder="i.e. 1.example.com">
+      </div>
+     </div>
+    </div>
+
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="siteroot">Path to Apps</label>
+       <input type="text" name="siteroot" class="form-control" placeholder="i.e. /http/users">
+      </div>
+     </div>
+    </div>
+
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="userprefix">User Prefix</label>
+       <input type="text" name="userprefix" class="form-control" placeholder="i.e. user_">
+      </div>
+     </div>
+    </div>
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="apisecret">API Secret</label>
+       <input type="text" name="apisecret" class="form-control" placeholder="i.e. qht_big_dgf_secret_gsdkcj_goes_hdgcbfg_here_jfg">
+      </div>
+     </div>
+    </div>
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="apimethod">API uses oAuth1.0a, RSA is more secure as it requires a public key.</label>
+       <select name="apimethod" class="form-control">
+        <option value="RSA-SHA1">RSA-SHA1</option>
+        <option value="HMAC-SHA1">HMAC-SHA1</option>
+       </select>
+      </div>
+     </div>
+    </div>
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="vhostsfile">Server Path to Virtual Hosts File</label>
+       <input type="text" name="vhostsfile" class="form-control" placeholder="i.e. /http/httpd/conf.d/virtual_host_list.common">
+      </div>
+     </div>
+    </div>
+
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="scriptext">Script Extension</label>
+       <input type="text" name="scriptext" class="form-control" placeholder="i.e. cgi or empty">
+      </div>
+     </div>
+    </div>^
+ /display
+/if
+>>
+
+
+
+
+<<
+if domainname=wrapperdomains[1] then else
+ display ^
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="sudouser">sudo user</label>
+       <input type="text" name="sudouser" class="form-control" placeholder="i.e. ec2-user">
+      </div>
+     </div>
+    </div>
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="sudo">Path to sudo</label>
+       <input type="text" name="sudo" class="form-control" placeholder="i.e. /usr/bin/sudo">
+      </div>
+     </div>
+    </div>^
+ /display
+/if
+>>
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="logtail">Lines to save in Log Files when "truncating"</label>
+       <input type="text" name="logtail" class="form-control" placeholder="i.e. 10000">
+      </div>
+     </div>
+    </div>
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="asetup">Install HTML/OS Automatically. Upgrades are always performed manually.</label>
+       <select name="asetup" class="form-control">
+        <option value="">Choose...</option>
+        <option value="manual">no</option>
+        <option value="automatic">yes</option>
+       </select>
+      </div>
+     </div>
+    </div>
+
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="usewww">When auto adding a domain use www.domain.com as the default domain</label>
+       <select name="usewww" class="form-control">
+        <option value="">Choose...</option>
+        <option value="naked">no</option>
+        <option value="www">yes</option>
+       </select>
+      </div>
+     </div>
+    </div>
+
+
+<<
+if domainname=wrapperdomains[1] then else
+ display ^
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="defaulttld">Default Top Level Domain when automatically adding a domain</label>
+       <select name="defaulttld" class="form-control">
+        <option value="">Choose...</option>^
+ /display
+
+ temp=split('com org net int edu gov mil',' ')
+ for name=temp rowname=x do
+  display '        <option value="'+x[1]+'">.'+x[1]+'</option>' /display
+ /for
+
+ display ^
+       </select>
+      </div>
+     </div>
+    </div>^
+ /display
+/if
+>>
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="asetupver">Default HTML/OS Version</label>
+       <select name="asetupver" class="form-control">
+        <option value="">Choose...</option>
+<<
+temp=reversesortcol(sysls('/system/installprograms'),1)
+for name=temp rowname=x do
+ if right(x[1],4)='.cgi' and count(x[1],'_')=0 then
+  ver=replace(replace(x[1],'asetup',''),'.cgi','')
+  display '        <option value="'+ver+'">'+ver+'</option>' /display
+ /if
+/for
+>>
+       </select>
+      </div>
+     </div>
+    </div>
+
+
+
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <label for="defaultuser">Default User (unknown domains will be directed to this user)</label>
+       <select name="defaultuser" class="form-control">
+        <option value="default">default</option>
+<<
+temp=multisite_users()
+for name=temp rowname=x do
+ if left(x[1],length(userprefix))=userprefix then
+  display '        <option value="'+x[1]+'">'+replace(x[1],userprefix,'')+'</option>' /display
+ /if
+/for
+>>
+       </select>
+      </div>
+     </div>
+    </div>
+
+
+
+
+    <div class="row">
+     <div class="col-md-12">
+      <div class="form-group">
+       <button type="submit" name="mybutton" value="save" class="form-control">Save Changes</submit>
+      </div>
+     </div>
+    </div>
+
+    </form>
+
+   </div>
+  </div>
+ </body>
+</html>
+<<overlay saveprefs
+
+
+
+   putval('/apps/multisite/defaults.txt','accessdomain',ACCESSDOMAIN)
+   putval('/apps/multisite/defaults.txt','defaultuser' ,DEFAULTUSER )
+   putval('/apps/multisite/defaults.txt','siteroot'    ,SITEROOT    )
+   putval('/apps/multisite/defaults.txt','userprefix'  ,USERPREFIX  )
+   putval('/apps/multisite/defaults.txt','vhostsfile'  ,VHOSTSFILE  )
+   putval('/apps/multisite/defaults.txt','sudouser'    ,SUDOUSER    )
+   putval('/apps/multisite/defaults.txt','sudo'        ,SUDO        )
+   putval('/apps/multisite/defaults.txt','asetup'      ,ASETUP      )
+   putval('/apps/multisite/defaults.txt','asetupver'   ,ASETUPVER   )
+   putval('/apps/multisite/defaults.txt','apisecret'   ,APISECRET   )
+   putval('/apps/multisite/defaults.txt','apimethod'   ,APIMETHOD   )
+   putval('/apps/multisite/defaults.txt','usewww'      ,USEWWW      )
+   putval('/apps/multisite/defaults.txt','defaulttld'  ,DEFAULTTLD  )
+   putval('/apps/multisite/defaults.txt','scriptext'   ,SCRIPTEXT   )
+   putval('/apps/multisite/defaults.txt','logtail'     ,LOGTAIL     )
+
+
+
+   goto page
+>>
