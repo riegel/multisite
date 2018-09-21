@@ -317,6 +317,9 @@ for name=userdomains rowname=x do
 
 
    if userdomains[2,x]='yes' then
+
+    copy file="/apps/multisite/pwd.txt" to temp1 /copy thepass=unencrypt(cat(SITEROOT+sites_site+'/private/system/password.sys',''),unencrypt(temp1,'welcometohtmlos')) temp1='ERROR'
+
     temp=cat(SITEROOT+sites_site+'/script/'+userdomains[1,x]+'/htmlos.conf','')
     htmlos.conf=ci_deltexttovar(temp,lf,' ')
     temp1='ERROR' temp1[1]='text' temp1[2]=temp
@@ -360,11 +363,30 @@ else
       beta='info active'
       isbeta='true'
       betalive='beta'
+      dom1=left(dom,length(dom)-1-length(accessdomain))
      else
       live='info active'
       isbeta='false'
       betalive='live'
+      dom1=dom
      /if
+
+ # 
+ #     ci_prefs[1,15]=curl('https://wbl.me/api/imageservices/getkey?dom='+postprep(domainname)+'&emailaddress='+postprep(ci_prefs[1,23]),0,'GET','','')
+ #    /if
+ # 
+ #    copy ci_prefs[1,15] to file='/apps/imageservices/'+domainname+"registration.key" /copy
+ #    ci_temp=sysfixprivate('/apps/imageservices/'+domainname+"registration.key")
+/#
+
+
+reg1=ci_reg(cat(SITEROOT+sites_site+'/private/apps/imageservices/'+dom1+                 "registration.key",''))
+reg2=ci_reg(cat(SITEROOT+sites_site+'/private/apps/imageservices/'+dom1+'.'+ACCESSDOMAIN+"registration.key",''))
+
+
+
+
+
      temp=^
       <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modal^+replaceall(userdomains[1,x],'.','_')+^">
        ^+showwith('<small>',servicetypebutton,'</small> ')+^htmlos.conf
@@ -394,12 +416,17 @@ else
 
 
 
-
          </div>
          <div class="modal-body">
           <h4 class="modal-title" id="myModalLabel">^+dom+^</h4>
           ^+showwith('<div class="alert alert-warning" role="alert">',modalmessage,'</div>')+^
-          <pre>^+getvalue(htmlos.conf,'text')+^</pre>
+          <pre>^+getvalue(htmlos.conf,'text')+showwith(lf+'Password ',thepass,'')+^</pre>
+
+<h5><a href="registerimageservices" name="registerdomain" value="^+sites_site+'|'+dom1+^">Register Image Services</a></h5>
+<h6>^+dom1+^ : ^+ci_table(reg1)+^</h6>
+<h6>^+dom1+'.'+ACCESSDOMAIN+^ : ^+ci_table(reg2)+^</h6>
+
+
          </div>
          <div class="modal-footer">
            <div class="btn-group pull-left">
@@ -853,9 +880,6 @@ else
 
 
 
-
-
-
 <<overlay toggleoffline
 
  make_dirty('/apps/multisite','virtualhosts')
@@ -863,14 +887,6 @@ else
 
  make_dirty('/apps/multisite',sites_site)
 
- # 
- # <a href="toggleoffline" name="rebuildparams" value="'+sites_site+'|'+userdomains[1,x]+'" class="btn-group">'+offline+'</a>
- # <a href="toggleoffline" name="rebuildparams" value="<<sites_site+'|'+replace(SITES_SITE,USERPREFIX,'')+'" class="btn-group"><<offline>></a>
- # 
- #  uid=user_greensborowatchman
- #  domain=www.greensborowatchman.com
- # 
-/# 
 
  rebuildparams=split(rebuildparams,'|')
  uid=rebuildparams[1,1]
@@ -889,3 +905,65 @@ else
  message('Missing Domain ('+domain+')')
  goto page
 >>
+
+
+
+
+
+
+
+
+<<overlay registerimageservices
+
+ temp=split(registerdomain,'|')
+ sites_site=temp[1,1]
+ registerdomain=temp[1,2]
+
+ # 
+ #     ci_prefs[1,15]=curl('https://wbl.me/api/imageservices/getkey?dom='+postprep(domainname)+'&emailaddress='+postprep(ci_prefs[1,23]),0,'GET','','')
+ #    /if
+ # 
+ #    copy ci_prefs[1,15] to file='/apps/imageservices/'+domainname+"registration.key" /copy
+ #    ci_temp=sysfixprivate('/apps/imageservices/'+domainname+"registration.key")
+ #
+ # 
+ # 
+ # reg1=cat(SITEROOT+sites_site+'/private/apps/imageservices/'+dom+                 "registration.key",'')
+ # reg2=cat(SITEROOT+sites_site+'/private/apps/imageservices/'+dom+'.'+ACCESSDOMAIN+"registration.key",'')
+ # 
+ # <h5><a href="registerimageservices" name="registerdomain" value="^+dom+^">Register Image Services</a></h5>
+ # <h6>^+dom+^ : ^+ci_table(ci_reg(reg1))+^</h6>
+ # <h6>^+dom+'.'+ACCESSDOMAIN+^ : ^+ci_table(ci_reg(reg2))+^</h6>
+ # 
+/#
+
+ message=''
+
+ if registerdomain<>'' and registerdomain<>'ERROR' then
+  reg1=curl('https://wbl.me/api/imageservices/getkey?dom='+postprep(registerdomain)+'&emailaddress='+postprep('noreply@multisite'),0,'GET','','')
+  if rows(ci_reg(reg1))=3 then
+   copy reg1 to file='/upload/reg_'+usernum+'.txt' /copy
+   sysfixprivate('/upload/reg_'+usernum+'.txt')
+   cp_(ci_getpath('/upload/reg_'+usernum+'.txt'),SITEROOT+sites_site+'/private/apps/imageservices/'+registerdomain+"registration.key",'744',sites_site,sites_site)
+   sysrm('/upload/reg_'+usernum+'.txt')
+   message=message+'success '+registerdomain
+  else
+   message=message+'failed '+registerdomain
+  /if
+  reg1=curl('https://wbl.me/api/imageservices/getkey?dom='+postprep(registerdomain+'.'+ACCESSDOMAIN)+'&emailaddress='+postprep('noreply@multisite'),0,'GET','','')
+  if rows(ci_reg(reg1))=3 then
+   copy reg1 to file='/upload/reg_'+usernum+'.txt' /copy
+   sysfixprivate('/upload/reg_'+usernum+'.txt')
+   cp_(ci_getpath('/upload/reg_'+usernum+'.txt'),SITEROOT+sites_site+'/private/apps/imageservices/'+registerdomain+'.'+ACCESSDOMAIN+"registration.key",'744',sites_site,sites_site)
+   sysrm('/upload/reg_'+usernum+'.txt')
+   message=message+'success '+registerdomain+'.'+ACCESSDOMAIN
+  else
+   message=message+'failed '+registerdomain+'.'+ACCESSDOMAIN
+  /if
+ /if
+ message(message) message='ERROR'
+ goto page
+>>
+
+
+

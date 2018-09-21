@@ -41,11 +41,11 @@ for( var i = 0; i < excludelist.length; ++i ) {
  }
 }
 
- var rsyncpublic='rsync -aveP --rsh='+"'"+'ssh'+showwith(" -p",$('#REMOTE_PORT').val(),"")+"' "+showwith('',$('option:selected', '#RSYNC_OPTIONS').val(),' ')+exclude+$('#OLD_SERVER').val()+':'+$('#OLD_PATH_TO_PUBLIC').val()+' <<SITEROOT>><<SITES_SITE>>/public/'
+ var rsyncpublic='sudo -u <<sites_site>> rsync -aveP --rsh='+"'"+'ssh'+showwith(" -p",$('#REMOTE_PORT').val(),"")+"' "+showwith('',$('option:selected', '#RSYNC_OPTIONS').val(),' ')+exclude+$('#OLD_SERVER').val()+':'+$('#OLD_PATH_TO_PUBLIC').val()+' <<SITEROOT>><<SITES_SITE>>/public/'
 
  $('#publiccommand').html(rsyncpublic);
 
- var rsyncprivate='rsync -aveP --rsh='+"'"+'ssh'+showwith(" -p",$('#REMOTE_PORT').val(),"")+"' "+showwith('',$('option:selected', '#RSYNC_OPTIONS').val(),' ')+exclude+$('#OLD_SERVER').val()+':'+$('#OLD_PATH_TO_PRIVATE').val()+' <<SITEROOT>><<SITES_SITE>>/private/'
+ var rsyncprivate='sudo -u <<sites_site>> rsync -aveP --rsh='+"'"+'ssh'+showwith(" -p",$('#REMOTE_PORT').val(),"")+"' "+showwith('',$('option:selected', '#RSYNC_OPTIONS').val(),' ')+exclude+$('#OLD_SERVER').val()+':'+$('#OLD_PATH_TO_PRIVATE').val()+' <<SITEROOT>><<SITES_SITE>>/private/'
 
  $('#privatecommand').html(rsyncprivate);
 
